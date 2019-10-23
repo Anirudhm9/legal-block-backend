@@ -9,6 +9,7 @@ var TokenManager = require("../../lib/tokenManager");
 var CodeGenerator = require("../../lib/codeGenerator");
 var ERROR = UniversalFunctions.CONFIG.APP_CONSTANTS.STATUS_MSG.ERROR;
 var _ = require("underscore");
+var NodeMailer = require('../../lib/nodeMailer');
 
 var createUser = function(payloadData, callback) {
   var accessToken = null;
@@ -116,6 +117,7 @@ var createUser = function(payloadData, callback) {
             }
           } else {
             customerData = customerDataFromDB;
+            NodeMailer.sendMail(payloadData.emailId, uniqueCode);
             cb();
           }
         });
@@ -448,6 +450,7 @@ var resendOTP = function(userData, callback) {
           lean: true
         };
         Service.UserService.updateUser(criteria, setQuery, options, cb);
+        NodeMailer.sendMail(payloadData.emailId, uniqueCode);
       }
     ],
     function(err, result) {
@@ -776,6 +779,7 @@ var forgetPassword = function(payloadData, callback) {
           if (err) {
             cb(err);
           } else {
+            NodeMailer.sendMail(payloadData.emailId, code);
             cb();
           }
         });
