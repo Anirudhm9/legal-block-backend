@@ -5,5 +5,7 @@
 module.exports = {
   DemoBaseController: require("./demoController/demoBaseController"),
   UserBaseController: require("./userController/userBaseController"),
-  AdminBaseController: require("./adminController/adminBaseController")
+  AdminBaseController: require("./adminController/adminBaseController"),
+  TemplateLibraryBaseController: require('./templateLibraryController/templateLibraryBaseController'),
+  ContractBaseController: require('./contractController/contractBaseController')
 };

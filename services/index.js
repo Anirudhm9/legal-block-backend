@@ -4,5 +4,7 @@
 module.exports = {
   UserService: require("./userService"),
   ForgetPasswordService: require("./forgetPasswordService"),
-  AdminService: require("./adminService")
+  AdminService: require("./adminService"),
+  TemplateLibraryService: require('./templateLibraryService'),
+  ContractService: require('./contractService')
 };
