@@ -9,6 +9,7 @@ var CodeGenerator = require("../../lib/codeGenerator");
 var ERROR = UniversalFunctions.CONFIG.APP_CONSTANTS.STATUS_MSG.ERROR;
 var _ = require("underscore");
 var Config = require("../../config");
+var NodeMailer = require('../../lib/nodeMailer');
 
 var adminLogin = function (payloadData, callback) {
   payloadData.emailId = payloadData.emailId.toLowerCase();
@@ -172,6 +173,244 @@ var accessTokenLogin = function (userData, callback) {
   );
 };
 
+var registerAdmin = function (payloadData, callback) {
+  var accessToken = null;
+  var uniqueCode = null;
+  var dataToSave = payloadData;
+  if (dataToSave.password)
+    dataToSave.password = UniversalFunctions.CryptData(dataToSave.password);
+  var customerData = null;
+  var appVersion = null;
+  async.series(
+    [
+      function (cb) {
+        var query = {
+          $or: [{ emailId: payloadData.emailId }]
+        };
+        Service.AdminService.getAdmin(query, {}, { lean: true }, function (
+          error,
+          data
+        ) {
+          if (error) {
+            cb(error);
+          } else {
+            if (data && data.length > 0) {
+              if (data[0].emailVerified == true) {
+                cb(ERROR.USER_ALREADY_REGISTERED);
+              } else {
+                Service.UserService.deleteUser({ _id: data[0]._id }, function (
+                  err,
+                  updatedData
+                ) {
+                  if (err) cb(err);
+                  else cb(null);
+                });
+              }
+            } else {
+              cb(null);
+            }
+          }
+        });
+      },
+      function (cb) {
+        //Validate for facebookId and password
+        if (!dataToSave.password) {
+          cb(ERROR.PASSWORD_REQUIRED);
+        } else {
+          cb();
+        }
+      },
+      function (cb) {
+        //Validate countryCode
+        if (dataToSave.countryCode.lastIndexOf("+") == 0) {
+          if (!isFinite(dataToSave.countryCode.substr(1))) {
+            cb(ERROR.INVALID_COUNTRY_CODE);
+          } else {
+            cb();
+          }
+        } else {
+          cb(ERROR.INVALID_COUNTRY_CODE);
+        }
+      },
+      function (cb) {
+        //Validate phone No
+        if (
+          dataToSave.phoneNumber &&
+          dataToSave.phoneNumber.split("")[0] == 0
+        ) {
+          cb(ERROR.INVALID_PHONE_NO_FORMAT);
+        } else {
+
+          cb();
+        }
+      },
+      function (cb) {
+        CodeGenerator.generateUniqueCode(
+          6,
+          UniversalFunctions.CONFIG.APP_CONSTANTS.DATABASE.USER_ROLES.ADMIN,
+          function (err, numberObj) {
+            if (err) {
+              cb(err);
+            } else {
+              if (!numberObj || numberObj.number == null) {
+                cb(ERROR.UNIQUE_CODE_LIMIT_REACHED);
+              } else {
+                uniqueCode = numberObj.number;
+                cb();
+              }
+            }
+          }
+        );
+      },
+      function (cb) {
+        //Insert Into DB
+        dataToSave.OTPCode = uniqueCode;
+        dataToSave.registrationDate = new Date().toISOString();
+        dataToSave.firstLogin = true;
+        dataToSave.userType = Config.APP_CONSTANTS.DATABASE.USER_ROLES.ADMIN;
+        Service.AdminService.createAdmin(dataToSave, function (
+          err,
+          customerDataFromDB
+        ) {
+          if (err) {
+            if (err.code == 11000 && err.message.indexOf("emailId_1") > -1) {
+              cb(ERROR.EMAIL_NO_EXIST);
+            } else {
+              cb(err);
+            }
+          } else {
+            customerData = customerDataFromDB;
+            NodeMailer.sendMail(payloadData.emailId, uniqueCode);
+            cb();
+          }
+        });
+      },
+      // function (cb) {
+      //     //Send SMS to User
+      //     if (customerData) {
+      //         NotificationManager.sendSMSToUser(uniqueCode, dataToSave.countryCode, dataToSave.mobileNo, function (err, data) {
+      //             cb();
+      //         })
+      //     } else {
+      //         cb(ERROR.IMP_ERROR)
+      //     }
+      //
+      // },
+      function (cb) {
+        console.log(">>>>", customerData)
+        //Set Access Token
+        if (customerData) {
+          var tokenData = {
+            id: customerData._id,
+            type:
+              UniversalFunctions.CONFIG.APP_CONSTANTS.DATABASE.USER_ROLES.ADMIN
+          };
+          TokenManager.setToken(tokenData, function (err, output) {
+            if (err) {
+              cb(err);
+            } else {
+              accessToken = (output && output.accessToken) || null;
+              cb();
+            }
+          });
+        } else {
+          console.log(">>", customerData)
+          cb(ERROR.IMP_ERROR);
+        }
+      },
+      function (cb) {
+        appVersion = {
+          latestIOSVersion: 100,
+          latestAndroidVersion: 100,
+          criticalAndroidVersion: 100,
+          criticalIOSVersion: 100
+        };
+        cb(null);
+      }
+    ],
+    function (err, data) {
+      if (err) {
+        callback(err);
+      } else {
+        callback(null, {
+          accessToken: accessToken,
+          otpCode: customerData.OTPCode,
+          adminDetails: UniversalFunctions.deleteUnnecessaryUserData(
+            customerData
+          ),
+          appVersion: appVersion
+        });
+      }
+    }
+  );
+};
+
+var verifyOTP = function (userData, payloadData, callback) {
+  var customerData;
+  async.series(
+    [
+      function (cb) {
+        var query = {
+          _id: userData._id
+        };
+        var options = { lean: true };
+        Service.AdminService.getAdmin(query, {}, options, function (err, data) {
+          if (err) {
+            cb(err);
+          } else {
+            if (data.length == 0) cb(ERROR.INCORRECT_ACCESSTOKEN);
+            else {
+              customerData = (data && data[0]) || null;
+              cb();
+            }
+          }
+        });
+      },
+      function (cb) {
+        //Check verification code :
+        if (payloadData.OTPCode == customerData.OTPCode) {
+          cb();
+        } else {
+          cb(ERROR.INVALID_CODE);
+        }
+      },
+      function (cb) {
+        //trying to update customer
+        var criteria = {
+          _id: userData._id,
+          OTPCode: payloadData.OTPCode
+        };
+        var setQuery = {
+          $set: { emailVerified: true },
+          $unset: { OTPCode: 1 }
+        };
+        var options = { new: true };
+        Service.AdminService.updateAdmin(criteria, setQuery, options, function (
+          err,
+          updatedData
+        ) {
+          if (err) {
+            cb(err);
+          } else {
+            if (!updatedData) {
+              cb(ERROR.INVALID_CODE);
+            } else {
+              cb();
+            }
+          }
+        });
+      }
+    ],
+    function (err, result) {
+      if (err) {
+        callback(err);
+      } else {
+        callback();
+      }
+    }
+  );
+};
+
 var createAdmin = function (userData, payloadData, callback) {
   var newAdmin;
   async.series(
@@ -212,6 +451,7 @@ var createAdmin = function (userData, payloadData, callback) {
           if (err) cb(err)
           else {
             newAdmin = data;
+            NodeMailer.sendAccountMail(payloadData.emailId, payloadData.initialPassword);
             cb()
           }
         })
@@ -342,6 +582,7 @@ var createUser = function (userData, payloadData, callback) {
         if (err) cb(err)
         else {
           newUserData = data;
+          NodeMailer.sendAccountMail(payloadData.emailId, payloadData.initialPassword);
           cb()
         }
       })
@@ -354,6 +595,7 @@ var createUser = function (userData, payloadData, callback) {
 
 var getUser = function (userData, callback) {
   var userList = []
+  var userFound = null;
   async.series([
     function (cb) {
       var criteria = {
@@ -362,7 +604,7 @@ var getUser = function (userData, callback) {
       Service.AdminService.getAdmin(criteria, { password: 0 }, {}, function (err, data) {
         if (err) cb(err);
         else {
-          if (data.length == 0) cb(ERROR.INCORRECT_ACCESSTOKEN);
+          if (data.length == 0) cb();
           else {
             userFound = (data && data[0]) || null;
             if (userFound.isBlocked == true) cb(ERROR.ACCOUNT_BLOCKED)
@@ -370,6 +612,25 @@ var getUser = function (userData, callback) {
           }
         }
       });
+    },
+    function (cb) {
+      if (!userFound) {
+        var criteria = {
+          _id: userData._id
+        };
+        Service.UserService.getUser(criteria, { password: 0 }, {}, function (err, data) {
+          if (err) cb(err);
+          else {
+            if (data.length == 0) cb(ERROR.INCORRECT_ACCESSTOKEN);
+            else {
+              userFound = (data && data[0]) || null;
+              if (userFound.isBlocked == true) cb(ERROR.ACCOUNT_BLOCKED)
+              else cb()
+            }
+          }
+        });
+      }
+      else cb();
     },
     function (cb) {
       var projection = {
@@ -593,5 +854,7 @@ module.exports = {
   getUser: getUser,
   blockUnblockUser: blockUnblockUser,
   changePassword: changePassword,
-  logoutAdmin: logoutAdmin
+  logoutAdmin: logoutAdmin,
+  registerAdmin: registerAdmin,
+  verifyOTP: verifyOTP
 };

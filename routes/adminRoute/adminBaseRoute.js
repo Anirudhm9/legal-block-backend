@@ -45,6 +45,124 @@ var adminLogin = {
   }
 };
 
+var registerAdmin = {
+  method: "POST",
+  path: "/api/admin/register",
+  handler: function(request, h) {
+    var payloadData = request.payload;
+    return new Promise((resolve, reject) => {
+      if (!UniversalFunctions.verifyEmailFormat(payloadData.emailId)) {
+        reject(
+          UniversalFunctions.sendError(
+            UniversalFunctions.CONFIG.APP_CONSTANTS.STATUS_MSG.ERROR
+              .INVALID_EMAIL_FORMAT
+          )
+        );
+      } else {
+        Controller.AdminBaseController.registerAdmin(payloadData, function(
+          err,
+          data
+        ) {
+          if (err) {
+            reject(UniversalFunctions.sendError(err));
+          } else {
+            resolve(
+              UniversalFunctions.sendSuccess(
+                UniversalFunctions.CONFIG.APP_CONSTANTS.STATUS_MSG.SUCCESS
+                  .CREATED,
+                data
+              )
+            );
+          }
+        });
+      }
+    });
+  },
+  config: {
+    description: "Register a new admin",
+    tags: ["api", "admin"],
+    validate: {
+      payload: {
+        fullName: Joi.string()
+          .regex(/^[a-zA-Z ]+$/)
+          .trim()
+          .min(2)
+          .required(),
+        emailId: Joi.string().required(),
+        phoneNumber: Joi.string()
+          .regex(/^[0-9]+$/)
+          .min(5)
+          .required(),
+        countryCode: Joi.string()
+          .max(4)
+          .required()
+          .trim(),
+        password: Joi.string()
+          .required()
+          .min(5)
+      },
+      failAction: UniversalFunctions.failActionFunction
+    },
+    plugins: {
+      "hapi-swagger": {
+        responseMessages:
+          UniversalFunctions.CONFIG.APP_CONSTANTS.swaggerDefaultResponseMessages
+      }
+    }
+  }
+};
+
+var verifyOTP = {
+  method: "PUT",
+  path: "/api/admin/verifyOTP",
+  handler: function(request, h) {
+    var payloadData = request.payload;
+    var userData =
+      (request.auth &&
+        request.auth.credentials &&
+        request.auth.credentials.userData) ||
+      null;
+    return new Promise((resolve, reject) => {
+      Controller.AdminBaseController.verifyOTP(userData, payloadData, function(
+        err,
+        data
+      ) {
+        if (err) {
+          reject(UniversalFunctions.sendError(err));
+        } else {
+          resolve(
+            UniversalFunctions.sendSuccess(
+              UniversalFunctions.CONFIG.APP_CONSTANTS.STATUS_MSG.SUCCESS
+                .VERIFY_COMPLETE,
+              data
+            )
+          );
+        }
+      });
+    });
+  },
+  config: {
+    auth: "UserAuth",
+    description: "Verify OTP for Admin",
+    tags: ["api", "admin"],
+    validate: {
+      headers: UniversalFunctions.authorizationHeaderObj,
+      payload: {
+        OTPCode: Joi.string()
+          .length(6)
+          .required()
+      },
+      failAction: UniversalFunctions.failActionFunction
+    },
+    plugins: {
+      "hapi-swagger": {
+        responseMessages:
+          UniversalFunctions.CONFIG.APP_CONSTANTS.swaggerDefaultResponseMessages
+      }
+    }
+  }
+};
+
 var accessTokenLogin = {
   /* *****************access token login****************** */
   method: "POST",
@@ -277,7 +395,7 @@ var createUser = {
 
 var getUser = {
     method: "GET",
-    path: "/api/admin/getUser",
+    path: "/api/contracts/getUser",
     handler: function(request, h) {
       var userData =
         (request.auth &&
@@ -461,6 +579,8 @@ var AdminBaseRoute = [
   getUser,
   blockUnblockUser,
   changePassword,
-  logoutAdmin
+  logoutAdmin,
+  registerAdmin,
+  verifyOTP
 ];
 module.exports = AdminBaseRoute;
