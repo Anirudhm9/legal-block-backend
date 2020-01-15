@@ -19,7 +19,6 @@ var admin = new Schema({
     },
     phoneNumber: {
         type: String,
-        required: true,
         trim: true,
         index: true,
         min: 5,
