@@ -595,6 +595,7 @@ var createUser = function (userData, payloadData, callback) {
 
 var getUser = function (userData, callback) {
   var userList = []
+  var userFound = null;
   async.series([
     function (cb) {
       var criteria = {
@@ -603,7 +604,7 @@ var getUser = function (userData, callback) {
       Service.AdminService.getAdmin(criteria, { password: 0 }, {}, function (err, data) {
         if (err) cb(err);
         else {
-          if (data.length == 0) cb(ERROR.INCORRECT_ACCESSTOKEN);
+          if (data.length == 0) cb();
           else {
             userFound = (data && data[0]) || null;
             if (userFound.isBlocked == true) cb(ERROR.ACCOUNT_BLOCKED)
@@ -611,6 +612,25 @@ var getUser = function (userData, callback) {
           }
         }
       });
+    },
+    function (cb) {
+      if (!userFound) {
+        var criteria = {
+          _id: userData._id
+        };
+        Service.UserService.getUser(criteria, { password: 0 }, {}, function (err, data) {
+          if (err) cb(err);
+          else {
+            if (data.length == 0) cb(ERROR.INCORRECT_ACCESSTOKEN);
+            else {
+              userFound = (data && data[0]) || null;
+              if (userFound.isBlocked == true) cb(ERROR.ACCOUNT_BLOCKED)
+              else cb()
+            }
+          }
+        });
+      }
+      else cb();
     },
     function (cb) {
       var projection = {

@@ -395,7 +395,7 @@ var createUser = {
 
 var getUser = {
     method: "GET",
-    path: "/api/admin/getUser",
+    path: "/api/contracts/getUser",
     handler: function(request, h) {
       var userData =
         (request.auth &&
