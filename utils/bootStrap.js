@@ -13,7 +13,8 @@ exports.bootstrapAdmin = function (callbackParent) {
             fullName: 'Launchpad Admin',
             userType: Config.APP_CONSTANTS.DATABASE.USER_ROLES.SUPERADMIN,
             createdAt: UniversalFunctions.getTimestamp(),
-            firstLogin: true
+            firstLogin: true,
+            emailVerified: true
         },
         {
             emailId: 'launchpad2@admin.com',
@@ -21,7 +22,8 @@ exports.bootstrapAdmin = function (callbackParent) {
             fullName: 'Launchpad Admin 2',
             userType: Config.APP_CONSTANTS.DATABASE.USER_ROLES.SUPERADMIN,
             createdAt: UniversalFunctions.getTimestamp(),
-            firstLogin: true
+            firstLogin: true,
+            emailVerified: true
         }
     ];
 
