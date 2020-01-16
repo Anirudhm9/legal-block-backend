@@ -27,6 +27,12 @@ var DATABASE = {
     PROCESSING: "AWAITING SIGNATURE",
     DENIED: "DENIED",
     COMPLETED: "COMPLETED"
+  },
+  TRANSACTION_STATUS: {
+    CREATED: "CREATED",
+    APPROVED: "SIGNED",
+    DENIED: "DENIED",
+    COMPLETED: "COMPLETED"
   }
 };
 
@@ -218,6 +224,11 @@ var STATUS_MSG = {
       statusCode: 400,
       customMessage: "Inavlid email format",
       type: "INVALID_EMAIL_FORMAT"
+    },
+    INVALID_TRANSACTION: {
+      statusCode: 400,
+      customMessage: "Invalid attempt",
+      type: "INVALID_TRANSACTION"
     }
   },
   SUCCESS: {

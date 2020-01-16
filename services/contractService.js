@@ -26,10 +26,27 @@ var getAggregateContracts = function (criteria, callback) {
     Models.Contracts.aggregate(criteria, callback);
 };
 
+var getPopulatedUsers = function (
+    criteria,
+    projection,
+    populate,
+    sortOptions,
+    setOptions,
+    callback
+) {
+    Models.Contracts.find(criteria)
+        .select(projection)
+        .populate(populate)
+        .sort(sortOptions)
+        .exec(function (err, result) {
+            callback(err, result);
+        });
+};
 module.exports = {
     updateContracts: updateContracts,
     createContract: createContract,
     deleteContract: deleteContract,
     getContract: getContract,
-    getAggregateContracts: getAggregateContracts
+    getAggregateContracts: getAggregateContracts,
+    getPopulatedUsers: getPopulatedUsers
 };

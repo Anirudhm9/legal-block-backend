@@ -8,5 +8,6 @@ module.exports = {
     Admin: require('./admin'),
     TemplateLibrary: require('./templateLibrary'),
     Contracts: require('./contracts'),
-    PersonalTemplate: require('./personalTemplate')
+    PersonalTemplate: require('./personalTemplate'),
+    Transaction: require('./transaction'),
 };
