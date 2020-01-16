@@ -16,8 +16,12 @@ var contracts = new Schema({
       Config.APP_CONSTANTS.DATABASE.CONTRACT_STATUS.DENIED
     ]
   },
+  assigneesSigned: [
+    { type: Schema.ObjectId, ref: 'user' }
+  ],
   content: { type: String, trim: true, required: true },
   dateAssigned: { type: Date, default: Date.now },
+  updatedAt: { type: Date }
 });
 
 module.exports = mongoose.model("contracts", contracts);
