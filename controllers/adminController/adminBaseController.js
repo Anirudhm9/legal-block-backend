@@ -51,7 +51,7 @@ var adminLogin = function (payloadData, callback) {
         if (!userFound) {
           cb(
             UniversalFunctions.CONFIG.APP_CONSTANTS.STATUS_MSG.ERROR
-              .EMAIL_NOT_FOUND
+              .EMAIL_NO_EXIST
           );
         } else {
           if (
@@ -105,12 +105,12 @@ var adminLogin = function (payloadData, callback) {
                 accessToken = output && output.accessToken;
                 cb();
               } else {
-                cb(error.IMP_ERROR);
+                cb(ERROR.IMP_ERROR);
               }
             }
           });
         } else {
-          cb(error.IMP_ERROR);
+          cb(ERROR.IMP_ERROR);
         }
       }
     ],
