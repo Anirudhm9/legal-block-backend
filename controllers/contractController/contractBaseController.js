@@ -69,7 +69,7 @@ var createContract = function (userData, payloadData, callback) {
                                     var user = data && data[0] || null;
                                     console.log(user.emailId)
                                     var name = user.firstName + ' ' + user.lastName;
-                                    NodeMailer.sendContractMail(user.emailId, name);
+                                    //NodeMailer.sendContractMail(user.emailId, name);
                                     embeddedCB()
                                 }
                             })
@@ -183,7 +183,7 @@ var signContract = function (userData, payloadData, callback) {
         },
         function (cb) {
             var dataToSet = {};
-            if (String(contract.assignor) == String(userData._id)) {
+            if (String(contract.assignor) == String(userData._id) && !assignorDenied) {
                 dataToSet = {
                     $set: {
                         contractStatus: Config.APP_CONSTANTS.DATABASE.CONTRACT_STATUS.COMPLETED,
