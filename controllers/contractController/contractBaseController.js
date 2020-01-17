@@ -142,14 +142,26 @@ var signContract = function (userData, payloadData, callback) {
         },
         function (cb) {
             if (payloadData.signed == false) {
-                Service.ContractService.updateContracts({ _id: payloadData.contractId }, { $set: { contractStatus: Config.APP_CONSTANTS.DATABASE.CONTRACT_STATUS.DENIED, updatedAt: Date.now() } }, {}, function (err, data) {
-                    if (err) cb(err)
-                    else {
-                        assignorDenied = true;
-                        DATA = data;
-                        cb();
-                    }
-                })
+                if (String(contract.assignor) == String(userData._id)) {
+                    Service.ContractService.updateContracts({ _id: payloadData.contractId }, { $set: { contractStatus: Config.APP_CONSTANTS.DATABASE.CONTRACT_STATUS.DENIED, updatedAt: Date.now() } }, {}, function (err, data) {
+                        if (err) cb(err)
+                        else {
+                            assignorDenied = true;
+                            DATA = data;
+                            cb();
+                        }
+                    })
+                }
+                else {
+                    Service.ContractService.updateContracts({ _id: payloadData.contractId }, { $set: { contractStatus: Config.APP_CONSTANTS.DATABASE.CONTRACT_STATUS.DENIED, updatedAt: Date.now() } }, {}, function (err, data) {
+                        if (err) cb(err)
+                        else {
+                            DATA = data;
+                            cb();
+                        }
+                    })
+                }
+
             }
             else {
                 cb();
@@ -198,7 +210,7 @@ var signContract = function (userData, payloadData, callback) {
                     }
                 })
             }
-            else {
+            if (String(contract.assignor) != String(userData._id)) {
                 dataToSet = {
                     $addToSet: {
                         assigneesSigned: userData._id
