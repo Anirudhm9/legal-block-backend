@@ -26,10 +26,28 @@ var getAggregateTransaction = function (criteria, callback) {
   Models.Transaction.aggregate(criteria, callback);
 };
 
+var getPopulatedUsers = function (
+  criteria,
+  projection,
+  populate,
+  sortOptions,
+  setOptions,
+  callback
+) {
+  Models.Transaction.find(criteria)
+    .select(projection)
+    .populate(populate)
+    .sort(sortOptions)
+    .exec(function (err, result) {
+      callback(err, result);
+    });
+};
+
 module.exports = {
   updateTransaction: updateTransaction,
   createTransaction: createTransaction,
   deleteTransaction: deleteTransaction,
   getTransaction: getTransaction,
-  getAggregateTransaction: getAggregateTransaction
+  getAggregateTransaction: getAggregateTransaction,
+  getPopulatedUsers: getPopulatedUsers
 };
