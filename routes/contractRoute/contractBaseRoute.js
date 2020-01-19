@@ -156,6 +156,45 @@ var getContractById = {
     }
 };
 
+var getContractTimeLineById = {
+    method: "POST",
+    path: "/api/transactions/getContractTimeLineById",
+    handler: function (request, h) {
+        var userData =
+            (request.auth &&
+                request.auth.credentials &&
+                request.auth.credentials.userData) ||
+            null;
+        return new Promise((resolve, reject) => {
+            Controller.ContractBaseController.getContractTimeLineById(userData, request.payload, function (err, data) {
+                if (!err) {
+                    resolve(UniversalFunctions.sendSuccess(null, data));
+                } else {
+                    reject(UniversalFunctions.sendError(err));
+                }
+            });
+        });
+    },
+    config: {
+        description: "Get Contract TimeLine By Id",
+        tags: ["api", "contracts"],
+        auth: "UserAuth",
+        validate: {
+            headers: UniversalFunctions.authorizationHeaderObj,
+            failAction: UniversalFunctions.failActionFunction,
+            payload: {
+                contractId: Joi.string().required()
+            }
+        },
+        plugins: {
+            "hapi-swagger": {
+                responseMessages:
+                    UniversalFunctions.CONFIG.APP_CONSTANTS.swaggerDefaultResponseMessages
+            }
+        }
+    }
+};
+
 var getContractsToSign = {
     method: "GET",
     path: "/api/contracts/getContractsToSign",
@@ -321,6 +360,7 @@ var ContractBaseRoute = [
     deleteContract,
     viewAllContractsByCategory,
     signContract,
-    getContractById
+    getContractById,
+    getContractTimeLineById
 ];
 module.exports = ContractBaseRoute;

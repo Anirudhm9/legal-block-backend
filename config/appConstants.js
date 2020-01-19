@@ -229,6 +229,11 @@ var STATUS_MSG = {
       statusCode: 400,
       customMessage: "Invalid attempt",
       type: "INVALID_TRANSACTION"
+    },
+    INVALID_ASSIGNEE: {
+      statusCode: 400,
+      customMessage: "Invalid assignee",
+      type: "INVALID_ASSIGNEE"
     }
   },
   SUCCESS: {

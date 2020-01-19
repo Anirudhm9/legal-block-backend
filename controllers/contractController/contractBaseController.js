@@ -26,7 +26,14 @@ var createContract = function (userData, payloadData, callback) {
                 }
             });
         },
-
+        function (cb) {
+            if (payloadData.assignees.indexOf(String(userData._id)) == -1) {
+                cb();
+            }
+            else {
+                cb(ERROR.INVALID_ASSIGNEE);
+            }
+        },
         function (cb) {
             payloadData.assignor = userData._id
             payloadData.contractStatus = Config.APP_CONSTANTS.DATABASE.CONTRACT_STATUS.PROCESSING;
@@ -285,6 +292,83 @@ var getContractById = function (userData, payloadData, callback) {
     })
 }
 
+var getContractTimeLineById = function (userData, payloadData, callback) {
+    var transactions = null;
+    async.series([
+
+        function (cb) {
+            var criteria = {
+                _id: userData._id,
+            };
+            Service.UserService.getUser(criteria, { password: 0 }, {}, function (err, data) {
+                if (err) cb(err);
+                else {
+                    if (data.length == 0) cb(ERROR.INCORRECT_ACCESSTOKEN);
+                    else {
+                        userFound = (data && data[0]) || null;
+                        cb();
+                    }
+                }
+            });
+        },
+        function (cb) {
+            var criteria = {
+                _id: payloadData.contractId,
+                $or: [
+                    {
+                        assignor: userData._id
+                    },
+                    {
+                        assignees: {
+                            $in: [userData._id]
+                        }
+                    }
+                ]
+            }
+            Service.ContractService.getContract(criteria, {}, {}, function (err, data) {
+                if (err) cb(err)
+                else {
+                    if (data && data.length == 0) {
+                        cb(ERROR.INVALID_TRANSACTION)
+                    }
+                    else {
+                        contract = data && data[0] || null;
+                        console.log(contract)
+                        cb();
+                    }
+                }
+            })
+        },
+        function (cb) {
+            var criteria = {
+                contractId: payloadData.contractId
+            }
+            var path = "assignor assignee";
+            var select = "firstName lastName";
+            var populate = {
+                path: path,
+                match: {},
+                select: select,
+                options: {
+                    lean: true
+                }
+            };
+            var projection = {
+                __v: 0,
+            };
+            Service.TransactionService.getPopulatedUsers(criteria, projection, populate, {}, {}, function (err, data) {
+                if (err) cb(err)
+                else {
+                    transactions = data;
+                    cb();
+                }
+            })
+        },
+    ], function (err, result) {
+        if (err) callback(err)
+        else callback(null, { data: transactions })
+    })
+}
 var viewAllContractsByCategory = function (userData, callback) {
     var contracts = null;
     async.series([
@@ -569,5 +653,6 @@ module.exports = {
     deleteContract: deleteContract,
     viewAllContractsByCategory: viewAllContractsByCategory,
     signContract: signContract,
-    getContractById: getContractById
+    getContractById: getContractById,
+    getContractTimeLineById: getContractTimeLineById
 };
