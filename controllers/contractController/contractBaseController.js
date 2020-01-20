@@ -379,7 +379,7 @@ var getContractStatuses = function (userData, callback) {
         },
         function (cb) {
             for (var i in contracts) {
-                if (contracts[i].assignees.includes(String(userData._id)) && !contracts[i].assigneesSigned.includes(String(userData._id)) || (String(contracts[i].assignor) == String(userData._id)) && contracts[i].assigneesSigned.length == contracts[i].assignees.length) {
+                if ((contracts[i].assignees.includes(String(userData._id)) && !contracts[i].assigneesSigned.includes(String(userData._id)) || (String(contracts[i].assignor) == String(userData._id)) && contracts[i].assigneesSigned.length == contracts[i].assignees.length) && contracts[i].contractStatus == Config.APP_CONSTANTS.DATABASE.CONTRACT_STATUS.PROCESSING ) {
                     statuses.AwaitingMySignature.push(contracts[i]);
                 }
                 else if (contracts[i].assigneesSigned.includes(String(userData._id)) && (contracts[i].assignees.length > 1) || (String(contracts[i].assignor) == String(userData._id)) && contracts[i].contractStatus == Config.APP_CONSTANTS.DATABASE.CONTRACT_STATUS.PROCESSING) {
