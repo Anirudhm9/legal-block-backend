@@ -195,6 +195,42 @@ var getContractTimeLineById = {
     }
 };
 
+var getContractStatuses = {
+    method: "GET",
+    path: "/api/contracts/getContractStatuses",
+    handler: function (request, h) {
+        var userData =
+            (request.auth &&
+                request.auth.credentials &&
+                request.auth.credentials.userData) ||
+            null;
+        return new Promise((resolve, reject) => {
+            Controller.ContractBaseController.getContractStatuses(userData, function (err, data) {
+                if (!err) {
+                    resolve(UniversalFunctions.sendSuccess(null, data));
+                } else {
+                    reject(UniversalFunctions.sendError(err));
+                }
+            });
+        });
+    },
+    config: {
+        description: "Get Contract Statuses",
+        tags: ["api", "contracts"],
+        auth: "UserAuth",
+        validate: {
+            headers: UniversalFunctions.authorizationHeaderObj,
+            failAction: UniversalFunctions.failActionFunction,
+        },
+        plugins: {
+            "hapi-swagger": {
+                responseMessages:
+                    UniversalFunctions.CONFIG.APP_CONSTANTS.swaggerDefaultResponseMessages
+            }
+        }
+    }
+};
+
 var getContractsToSign = {
     method: "GET",
     path: "/api/contracts/getContractsToSign",
@@ -361,6 +397,7 @@ var ContractBaseRoute = [
     viewAllContractsByCategory,
     signContract,
     getContractById,
-    getContractTimeLineById
+    getContractTimeLineById,
+    getContractStatuses
 ];
 module.exports = ContractBaseRoute;
