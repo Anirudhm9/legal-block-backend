@@ -292,6 +292,114 @@ var getContractById = function (userData, payloadData, callback) {
     })
 }
 
+var getContractStatuses = function (userData, callback) {
+    var contracts = null;
+    var statuses = {
+        AwaitingMySignature: [],
+        WaitingForOthers: [],
+        Completed: [],
+        Denied: [],
+    };
+    async.series([
+
+        function (cb) {
+            var criteria = {
+                _id: userData._id,
+            };
+            Service.UserService.getUser(criteria, { password: 0 }, {}, function (err, data) {
+                if (err) cb(err);
+                else {
+                    if (data.length == 0) cb(ERROR.INCORRECT_ACCESSTOKEN);
+                    else {
+                        userFound = (data && data[0]) || null;
+                        cb();
+                    }
+                }
+            });
+        },
+        function (cb) {
+            var criteria = [
+                {
+                    $match: {
+                        $or: [
+                            {
+                                assignor: userData._id
+                            },
+                            {
+                                assignees: {
+                                    $in: [userData._id]
+                                }
+                            }
+                        ],
+                        // $convert: {
+                        //     input: "$assignees"
+                        // }
+                    }
+                },
+                {
+                    $project: {
+                        _id: 1,
+                        contractName: 1,
+                        contractStatus: 1,
+                        dateAssigned: 1,
+                        updatedAt: 1,
+                        assignor: 1,
+                        'assignees': {
+                            '$map': {
+                                'input': '$assignees',
+                                'as': 'assignee',
+                                'in':
+                                    { $toString: '$$assignee' }
+                            }
+                        },
+                        'assigneesSigned': {
+                            '$map': {
+                                'input': '$assigneesSigned',
+                                'as': 'assigneeSigned',
+                                'in':
+                                    { $toString: '$$assigneeSigned' }
+                            }
+                        }
+                    }
+                }
+            ]
+
+            var projection = {
+                __v: 0,
+                // $toString: "$assignees"
+            }
+            Service.ContractService.getAggregateContracts(criteria, function (err, data) {
+                if (err) cb(err)
+                else {
+                    contracts = data;
+                    console.log(contracts)
+                    cb();
+                }
+            })
+        },
+        function (cb) {
+            for (var i in contracts) {
+                if (contracts[i].assignees.includes(String(userData._id)) && !contracts[i].assigneesSigned.includes(String(userData._id)) || (String(contracts[i].assignor) == String(userData._id)) && contracts[i].assigneesSigned.length == contracts[i].assignees.length) {
+                    statuses.AwaitingMySignature.push(contracts[i]);
+                }
+                else if (contracts[i].assigneesSigned.includes(String(userData._id)) && (contracts[i].assignees.length > 1) || (String(contracts[i].assignor) == String(userData._id)) && contracts[i].contractStatus == Config.APP_CONSTANTS.DATABASE.CONTRACT_STATUS.PROCESSING) {
+                    statuses.WaitingForOthers.push(contracts[i])
+                }
+                else if (contracts[i].assigneesSigned.length == contracts[i].assignees.length && (contracts[i].contractStatus == Config.APP_CONSTANTS.DATABASE.CONTRACT_STATUS.COMPLETED)) {
+                    statuses.Completed.push(contracts[i])
+                }
+                else if (contracts[i].contractStatus == Config.APP_CONSTANTS.DATABASE.CONTRACT_STATUS.DENIED) {
+                    statuses.Denied.push(contracts[i]);
+                }
+            }
+            cb();
+        }
+    ], function (err, result) {
+        if (err) callback(err)
+        else callback(null, { statuses: statuses })
+    })
+}
+
 var getContractTimeLineById = function (userData, payloadData, callback) {
     var transactions = null;
     async.series([
@@ -654,5 +762,6 @@ module.exports = {
     viewAllContractsByCategory: viewAllContractsByCategory,
     signContract: signContract,
     getContractById: getContractById,
-    getContractTimeLineById: getContractTimeLineById
+    getContractTimeLineById: getContractTimeLineById,
+    getContractStatuses: getContractStatuses
 };
