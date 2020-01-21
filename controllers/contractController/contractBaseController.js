@@ -97,6 +97,7 @@ var createContract = function (userData, payloadData, callback) {
 var signContract = function (userData, payloadData, callback) {
     var contract = null;
     var assignorDenied = false;
+    var assigneeDenied = false;
     var DATA = null;
     async.series([
         function (cb) {
@@ -163,12 +164,12 @@ var signContract = function (userData, payloadData, callback) {
                     Service.ContractService.updateContracts({ _id: payloadData.contractId }, { $set: { contractStatus: Config.APP_CONSTANTS.DATABASE.CONTRACT_STATUS.DENIED, updatedAt: Date.now() } }, {}, function (err, data) {
                         if (err) cb(err)
                         else {
+                            assigneeDenied = true;
                             DATA = data;
                             cb();
                         }
                     })
                 }
-
             }
             else {
                 cb();
@@ -217,7 +218,7 @@ var signContract = function (userData, payloadData, callback) {
                     }
                 })
             }
-            if (String(contract.assignor) != String(userData._id)) {
+            else if (String(contract.assignor) != String(userData._id) && !assigneeDenied) {
                 dataToSet = {
                     $addToSet: {
                         assigneesSigned: userData._id
@@ -233,6 +234,9 @@ var signContract = function (userData, payloadData, callback) {
                         cb();
                     }
                 })
+            }
+            else {
+                cb();
             }
             // TO DO: If last user, create a notification for the assignor
         },
@@ -331,9 +335,6 @@ var getContractStatuses = function (userData, callback) {
                                 }
                             }
                         ],
-                        // $convert: {
-                        //     input: "$assignees"
-                        // }
                     }
                 },
                 {
@@ -363,11 +364,6 @@ var getContractStatuses = function (userData, callback) {
                     }
                 }
             ]
-
-            var projection = {
-                __v: 0,
-                // $toString: "$assignees"
-            }
             Service.ContractService.getAggregateContracts(criteria, function (err, data) {
                 if (err) cb(err)
                 else {
@@ -379,7 +375,7 @@ var getContractStatuses = function (userData, callback) {
         },
         function (cb) {
             for (var i in contracts) {
-                if ((contracts[i].assignees.includes(String(userData._id)) && !contracts[i].assigneesSigned.includes(String(userData._id)) || (String(contracts[i].assignor) == String(userData._id)) && contracts[i].assigneesSigned.length == contracts[i].assignees.length) && contracts[i].contractStatus == Config.APP_CONSTANTS.DATABASE.CONTRACT_STATUS.PROCESSING ) {
+                if ((contracts[i].assignees.includes(String(userData._id)) && !contracts[i].assigneesSigned.includes(String(userData._id)) || (String(contracts[i].assignor) == String(userData._id)) && contracts[i].assigneesSigned.length == contracts[i].assignees.length) && contracts[i].contractStatus == Config.APP_CONSTANTS.DATABASE.CONTRACT_STATUS.PROCESSING) {
                     statuses.AwaitingMySignature.push(contracts[i]);
                 }
                 else if (contracts[i].assigneesSigned.includes(String(userData._id)) && (contracts[i].assignees.length > 1) || (String(contracts[i].assignor) == String(userData._id)) && contracts[i].contractStatus == Config.APP_CONSTANTS.DATABASE.CONTRACT_STATUS.PROCESSING) {

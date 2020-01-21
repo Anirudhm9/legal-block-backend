@@ -12,9 +12,9 @@ var adminLogin = {
   config: {
     description: "Admin Login",
     tags: ["api", "admin"],
-    handler: function(request, h) {
+    handler: function (request, h) {
       return new Promise((resolve, reject) => {
-        Controller.AdminBaseController.adminLogin(request.payload, function(
+        Controller.AdminBaseController.adminLogin(request.payload, function (
           error,
           data
         ) {
@@ -48,7 +48,7 @@ var adminLogin = {
 var registerAdmin = {
   method: "POST",
   path: "/api/admin/register",
-  handler: function(request, h) {
+  handler: function (request, h) {
     var payloadData = request.payload;
     return new Promise((resolve, reject) => {
       if (!UniversalFunctions.verifyEmailFormat(payloadData.emailId)) {
@@ -59,7 +59,7 @@ var registerAdmin = {
           )
         );
       } else {
-        Controller.AdminBaseController.registerAdmin(payloadData, function(
+        Controller.AdminBaseController.registerAdmin(payloadData, function (
           err,
           data
         ) {
@@ -115,7 +115,7 @@ var registerAdmin = {
 var verifyOTP = {
   method: "PUT",
   path: "/api/admin/verifyOTP",
-  handler: function(request, h) {
+  handler: function (request, h) {
     var payloadData = request.payload;
     var userData =
       (request.auth &&
@@ -123,7 +123,7 @@ var verifyOTP = {
         request.auth.credentials.userData) ||
       null;
     return new Promise((resolve, reject) => {
-      Controller.AdminBaseController.verifyOTP(userData, payloadData, function(
+      Controller.AdminBaseController.verifyOTP(userData, payloadData, function (
         err,
         data
       ) {
@@ -167,14 +167,14 @@ var accessTokenLogin = {
   /* *****************access token login****************** */
   method: "POST",
   path: "/api/admin/accessTokenLogin",
-  handler: function(request, h) {
+  handler: function (request, h) {
     var userData =
       (request.auth &&
         request.auth.credentials &&
         request.auth.credentials.userData) ||
       null;
     return new Promise((resolve, reject) => {
-      Controller.AdminBaseController.accessTokenLogin(userData, function(
+      Controller.AdminBaseController.accessTokenLogin(userData, function (
         err,
         data
       ) {
@@ -206,7 +206,7 @@ var accessTokenLogin = {
 var createAdmin = {
   method: "POST",
   path: "/api/admin/createAdmin",
-  handler: function(request, h) {
+  handler: function (request, h) {
     var userData =
       (request.auth &&
         request.auth.credentials &&
@@ -217,7 +217,7 @@ var createAdmin = {
       Controller.AdminBaseController.createAdmin(
         userData,
         payloadData,
-        function(err, data) {
+        function (err, data) {
           if (!err) {
             resolve(UniversalFunctions.sendSuccess(null, data));
           } else {
@@ -253,14 +253,14 @@ var createAdmin = {
 var getAdmin = {
   method: "GET",
   path: "/api/admin/getAdmin",
-  handler: function(request, h) {
+  handler: function (request, h) {
     var userData =
       (request.auth &&
         request.auth.credentials &&
         request.auth.credentials.userData) ||
       null;
     return new Promise((resolve, reject) => {
-      Controller.AdminBaseController.getAdmin(userData, function(err, data) {
+      Controller.AdminBaseController.getAdmin(userData, function (err, data) {
         if (!err) {
           resolve(UniversalFunctions.sendSuccess(null, data));
         } else {
@@ -289,7 +289,7 @@ var getAdmin = {
 var blockUnblockAdmin = {
   method: "PUT",
   path: "/api/admin/blockUnblockAdmin",
-  handler: function(request, h) {
+  handler: function (request, h) {
     var userData =
       (request.auth &&
         request.auth.credentials &&
@@ -300,7 +300,7 @@ var blockUnblockAdmin = {
       Controller.AdminBaseController.blockUnblockAdmin(
         userData,
         payloadData,
-        function(err, data) {
+        function (err, data) {
           if (!err) {
             resolve(UniversalFunctions.sendSuccess(null, data));
           } else {
@@ -334,7 +334,7 @@ var blockUnblockAdmin = {
 var createUser = {
   method: "POST",
   path: "/api/admin/createUser",
-  handler: function(request, h) {
+  handler: function (request, h) {
     var userData =
       (request.auth &&
         request.auth.credentials &&
@@ -345,7 +345,7 @@ var createUser = {
       Controller.AdminBaseController.createUser(
         userData,
         payloadData,
-        function(err, data) {
+        function (err, data) {
           if (!err) {
             resolve(UniversalFunctions.sendSuccess(null, data));
           } else {
@@ -394,180 +394,222 @@ var createUser = {
 };
 
 var getUser = {
-    method: "GET",
-    path: "/api/contracts/getUser",
-    handler: function(request, h) {
-      var userData =
-        (request.auth &&
-          request.auth.credentials &&
-          request.auth.credentials.userData) ||
-        null;
-      return new Promise((resolve, reject) => {
-        Controller.AdminBaseController.getUser(userData, function(err, data) {
+  method: "GET",
+  path: "/api/contracts/getUser",
+  handler: function (request, h) {
+    var userData =
+      (request.auth &&
+        request.auth.credentials &&
+        request.auth.credentials.userData) ||
+      null;
+    return new Promise((resolve, reject) => {
+      Controller.AdminBaseController.getUser(userData, function (err, data) {
+        if (!err) {
+          resolve(UniversalFunctions.sendSuccess(null, data));
+        } else {
+          reject(UniversalFunctions.sendError(err));
+        }
+      });
+    });
+  },
+  config: {
+    description: "get all user list",
+    tags: ["api", "admin"],
+    auth: "UserAuth",
+    validate: {
+      headers: UniversalFunctions.authorizationHeaderObj,
+      failAction: UniversalFunctions.failActionFunction
+    },
+    plugins: {
+      "hapi-swagger": {
+        responseMessages:
+          UniversalFunctions.CONFIG.APP_CONSTANTS.swaggerDefaultResponseMessages
+      }
+    }
+  }
+};
+
+var blockUnblockUser = {
+  method: "PUT",
+  path: "/api/admin/blockUnblockUser",
+  handler: function (request, h) {
+    var userData =
+      (request.auth &&
+        request.auth.credentials &&
+        request.auth.credentials.userData) ||
+      null;
+    var payloadData = request.payload;
+    return new Promise((resolve, reject) => {
+      Controller.AdminBaseController.blockUnblockUser(
+        userData,
+        payloadData,
+        function (err, data) {
           if (!err) {
             resolve(UniversalFunctions.sendSuccess(null, data));
           } else {
             reject(UniversalFunctions.sendError(err));
           }
-        });
-      });
-    },
-    config: {
-      description: "get all user list",
-      tags: ["api", "admin"],
-      auth: "UserAuth",
-      validate: {
-        headers: UniversalFunctions.authorizationHeaderObj,
-        failAction: UniversalFunctions.failActionFunction
-      },
-      plugins: {
-        "hapi-swagger": {
-          responseMessages:
-            UniversalFunctions.CONFIG.APP_CONSTANTS.swaggerDefaultResponseMessages
         }
+      );
+    });
+  },
+  config: {
+    description: "block/unblock a user",
+    tags: ["api", "admin"],
+    auth: "UserAuth",
+    validate: {
+      headers: UniversalFunctions.authorizationHeaderObj,
+      payload: {
+        userId: Joi.string().required(),
+        block: Joi.boolean().required()
+      },
+      failAction: UniversalFunctions.failActionFunction
+    },
+    plugins: {
+      "hapi-swagger": {
+        responseMessages:
+          UniversalFunctions.CONFIG.APP_CONSTANTS.swaggerDefaultResponseMessages
       }
     }
-  };
+  }
+};
 
-  var blockUnblockUser = {
-    method: "PUT",
-    path: "/api/admin/blockUnblockUser",
-    handler: function(request, h) {
+var changePassword = {
+  method: "PUT",
+  path: "/api/admin/changePassword",
+  handler: function (request, h) {
+    var userData =
+      (request.auth &&
+        request.auth.credentials &&
+        request.auth.credentials.userData) ||
+      null;
+    return new Promise((resolve, reject) => {
+      Controller.AdminBaseController.changePassword(
+        userData,
+        request.payload,
+        function (err, user) {
+          if (!err) {
+            resolve(
+              UniversalFunctions.sendSuccess(
+                UniversalFunctions.CONFIG.APP_CONSTANTS.STATUS_MSG.SUCCESS
+                  .PASSWORD_RESET,
+                user
+              )
+            );
+          } else {
+            reject(UniversalFunctions.sendError(err));
+          }
+        }
+      );
+    });
+  },
+  config: {
+    description: "change Password",
+    tags: ["api", "customer"],
+    auth: "UserAuth",
+    validate: {
+      headers: UniversalFunctions.authorizationHeaderObj,
+      payload: {
+        skip: Joi.boolean().required(),
+        oldPassword: Joi.string().when('skip', { is: false, then: Joi.string().required().min(5), otherwise: Joi.string().optional().allow("") }),
+        newPassword: Joi.string().when('skip', { is: false, then: Joi.string().required().min(5), otherwise: Joi.string().optional().allow("") })
+      },
+      failAction: UniversalFunctions.failActionFunction
+    },
+    plugins: {
+      "hapi-swagger": {
+        responseMessages:
+          UniversalFunctions.CONFIG.APP_CONSTANTS.swaggerDefaultResponseMessages
+      }
+    }
+  }
+};
+
+var logoutAdmin = {
+  method: "PUT",
+  path: "/api/admin/logout",
+  config: {
+    description: "Logout admin",
+    auth: "UserAuth",
+    tags: ["api", "admin"],
+    handler: function (request, h) {
       var userData =
         (request.auth &&
           request.auth.credentials &&
           request.auth.credentials.userData) ||
         null;
-      var payloadData = request.payload;
       return new Promise((resolve, reject) => {
-        Controller.AdminBaseController.blockUnblockUser(
-          userData,
-          payloadData,
-          function(err, data) {
-            if (!err) {
-              resolve(UniversalFunctions.sendSuccess(null, data));
-            } else {
-              reject(UniversalFunctions.sendError(err));
-            }
+        Controller.AdminBaseController.logoutAdmin(userData, function (
+          err,
+          data
+        ) {
+          if (err) {
+            reject(UniversalFunctions.sendError(err));
+          } else {
+            resolve(
+              UniversalFunctions.sendSuccess(
+                UniversalFunctions.CONFIG.APP_CONSTANTS.STATUS_MSG.SUCCESS
+                  .LOGOUT
+              )
+            );
           }
-        );
+        });
       });
     },
-    config: {
-      description: "block/unblock a user",
-      tags: ["api", "admin"],
-      auth: "UserAuth",
-      validate: {
-        headers: UniversalFunctions.authorizationHeaderObj,
-        payload: {
-          userId: Joi.string().required(),
-          block: Joi.boolean().required()
-        },
-        failAction: UniversalFunctions.failActionFunction
-      },
-      plugins: {
-        "hapi-swagger": {
-          responseMessages:
-            UniversalFunctions.CONFIG.APP_CONSTANTS.swaggerDefaultResponseMessages
-        }
+    validate: {
+      headers: UniversalFunctions.authorizationHeaderObj,
+      failAction: UniversalFunctions.failActionFunction
+    },
+    plugins: {
+      "hapi-swagger": {
+        responseMessages:
+          UniversalFunctions.CONFIG.APP_CONSTANTS.swaggerDefaultResponseMessages
       }
     }
-  };
+  }
+};
 
-  var changePassword = {
-    method: "PUT",
-    path: "/api/admin/changePassword",
-    handler: function(request, h) {
+var getNumberOfDocuments = {
+  method: "GET",
+  path: "/api/admin/getNumberOfDocuments",
+  config: {
+    description: "Gets number of documents ",
+    auth: "UserAuth",
+    tags: ["api", "admin"],
+    handler: function (request, h) {
       var userData =
         (request.auth &&
           request.auth.credentials &&
           request.auth.credentials.userData) ||
         null;
       return new Promise((resolve, reject) => {
-        Controller.AdminBaseController.changePassword(
-          userData,
-          request.payload,
-          function(err, user) {
-            if (!err) {
-              resolve(
-                UniversalFunctions.sendSuccess(
-                  UniversalFunctions.CONFIG.APP_CONSTANTS.STATUS_MSG.SUCCESS
-                    .PASSWORD_RESET,
-                  user
-                )
-              );
-            } else {
-              reject(UniversalFunctions.sendError(err));
-            }
+        Controller.AdminBaseController.getNumberOfDocuments(userData, function (
+          err,
+          data
+        ) {
+          if (err) {
+            reject(UniversalFunctions.sendError(err));
+          } else {
+            resolve(
+              UniversalFunctions.sendSuccess(null, data)
+            );
           }
-        );
+        });
       });
     },
-    config: {
-      description: "change Password",
-      tags: ["api", "customer"],
-      auth: "UserAuth",
-      validate: {
-        headers: UniversalFunctions.authorizationHeaderObj,
-        payload: {
-          skip: Joi.boolean().required(),
-          oldPassword: Joi.string().when('skip',{is:false,then: Joi.string().required().min(5),otherwise: Joi.string().optional().allow("")}),
-          newPassword: Joi.string().when('skip',{is:false,then: Joi.string().required().min(5),otherwise: Joi.string().optional().allow("")})
-        },
-        failAction: UniversalFunctions.failActionFunction
-      },
-      plugins: {
-        "hapi-swagger": {
-          responseMessages:
-            UniversalFunctions.CONFIG.APP_CONSTANTS.swaggerDefaultResponseMessages
-        }
+    validate: {
+      headers: UniversalFunctions.authorizationHeaderObj,
+      failAction: UniversalFunctions.failActionFunction
+    },
+    plugins: {
+      "hapi-swagger": {
+        responseMessages:
+          UniversalFunctions.CONFIG.APP_CONSTANTS.swaggerDefaultResponseMessages
       }
     }
-  };
+  }
+};
 
-  var logoutAdmin = {
-    method: "PUT",
-    path: "/api/admin/logout",
-    config: {
-      description: "Logout admin",
-      auth: "UserAuth",
-      tags: ["api", "admin"],
-      handler: function(request, h) {
-        var userData =
-          (request.auth &&
-            request.auth.credentials &&
-            request.auth.credentials.userData) ||
-          null;
-        return new Promise((resolve, reject) => {
-          Controller.AdminBaseController.logoutAdmin(userData, function(
-            err,
-            data
-          ) {
-            if (err) {
-              reject(UniversalFunctions.sendError(err));
-            } else {
-              resolve(
-                UniversalFunctions.sendSuccess(
-                  UniversalFunctions.CONFIG.APP_CONSTANTS.STATUS_MSG.SUCCESS
-                    .LOGOUT
-                )
-              );
-            }
-          });
-        });
-      },
-      validate: {
-        headers: UniversalFunctions.authorizationHeaderObj,
-        failAction: UniversalFunctions.failActionFunction
-      },
-      plugins: {
-        "hapi-swagger": {
-          responseMessages:
-            UniversalFunctions.CONFIG.APP_CONSTANTS.swaggerDefaultResponseMessages
-        }
-      }
-    }
-  };
 
 var AdminBaseRoute = [
   adminLogin,
@@ -581,6 +623,7 @@ var AdminBaseRoute = [
   changePassword,
   logoutAdmin,
   registerAdmin,
-  verifyOTP
+  verifyOTP,
+  getNumberOfDocuments
 ];
 module.exports = AdminBaseRoute;
