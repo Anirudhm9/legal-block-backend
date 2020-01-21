@@ -844,6 +844,82 @@ var logoutAdmin = function (userData, callbackRoute) {
   );
 }
 
+var getNumberOfDocuments = function (userData, callback) {
+  var DATA = [];
+  async.series([
+    function (cb) {
+      var criteria = {
+        _id: userData._id,
+        userType: Config.APP_CONSTANTS.DATABASE.USER_ROLES.SUPERADMIN
+      };
+      Service.AdminService.getAdmin(criteria, { password: 0 }, {}, function (err, data) {
+        if (err) cb(err);
+        else {
+          if (data.length == 0) cb(ERROR.INCORRECT_ACCESSTOKEN);
+          else {
+            userFound = (data && data[0]) || null;
+            cb()
+          }
+        }
+      });
+    },
+    function (cb) {
+      criteria = [
+        {
+          $group: {
+            _id: '$contractType',
+          },
+        },
+      ]
+      Service.ContractService.getAggregateContracts(criteria, function (err, data) {
+        if (err) cb(err)
+        else {
+          DATA.push({ Contracts: data.length });
+          cb();
+        }
+      })
+    },
+    function (cb) {
+      criteria = [
+        {
+          $group: {
+            _id: '$templateType',
+          },
+        },
+      ]
+      Service.TemplateLibraryService.getAggregateTemplates(criteria, function (err, data) {
+        if (err) cb(err)
+        else {
+          DATA.push({ Templates: data.length });
+          cb();
+        }
+      })
+    },
+    function (cb) {
+      Service.UserService.getUser({}, {}, { lean: true }, function (err, data) {
+        if (err) cb(err)
+        else {
+          DATA.push({ Users: data.length });
+          cb();
+        }
+      })
+    },
+    function (cb) {
+      DATA.push({ requests: 0 })
+      cb();
+    },
+    function (cb) {
+      DATA.push({ rules: 0 })
+      cb();
+    }
+    // TODO: requests
+    // TODO: rules
+  ], function (err, result) {
+    if (err) callback(err)
+    else callback(null, DATA);
+  })
+}
+
 module.exports = {
   adminLogin: adminLogin,
   accessTokenLogin: accessTokenLogin,
@@ -856,5 +932,6 @@ module.exports = {
   changePassword: changePassword,
   logoutAdmin: logoutAdmin,
   registerAdmin: registerAdmin,
-  verifyOTP: verifyOTP
+  verifyOTP: verifyOTP,
+  getNumberOfDocuments: getNumberOfDocuments
 };
