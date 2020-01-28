@@ -8,5 +8,6 @@ module.exports = {
   AdminBaseController: require("./adminController/adminBaseController"),
   TemplateLibraryBaseController: require('./templateLibraryController/templateLibraryBaseController'),
   ContractBaseController: require('./contractController/contractBaseController'),
-  RequestBaseController: require('./requestController/requestBaseController')
+  RequestBaseController: require('./requestController/requestBaseController'),
+  ActionBaseController: require('./actionController/actionBaseController'),
 };

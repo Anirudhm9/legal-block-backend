@@ -8,5 +8,6 @@ module.exports = {
   TemplateLibraryService: require('./templateLibraryService'),
   ContractService: require('./contractService'),
   TransactionService: require('./transactionService'),
-  RequestService: require('./requestService')
+  RequestService: require('./requestService'),
+  ActionService: require('./actionService'),
 };

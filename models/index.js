@@ -10,5 +10,6 @@ module.exports = {
     Contracts: require('./contracts'),
     PersonalTemplate: require('./personalTemplate'),
     Transaction: require('./transaction'),
-    Request: require('./request')
+    Request: require('./request'),
+    Action: require('./action'),
 };

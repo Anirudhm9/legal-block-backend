@@ -9,5 +9,6 @@ var AdminBaseRoute = require("./adminRoute/adminBaseRoute");
 var TemplateBaseRoute = require("./templateLibraryRoute/templateLibraryBaseRoute");
 var ContractBaseRoute = require("./contractRoute/contractBaseRoute");
 var RequestBaseRoute = require("./requestRoute/requestBaseRoute");
-var APIs = [].concat(DemoBaseRoute, UserBaseRoute, AdminBaseRoute, TemplateBaseRoute, ContractBaseRoute, RequestBaseRoute);
+var ActionBaseRoute = require("./actionRoute/actionBaseRoute");
+var APIs = [].concat(DemoBaseRoute, UserBaseRoute, AdminBaseRoute, TemplateBaseRoute, ContractBaseRoute, RequestBaseRoute, ActionBaseRoute);
 module.exports = APIs;
