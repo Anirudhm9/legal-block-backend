@@ -51,6 +51,7 @@ var createContract = function (userData, payloadData, callback) {
                 contractId: contract._id,
                 assignor: userFound._id,
                 transactionStatus: Config.APP_CONSTANTS.DATABASE.TRANSACTION_STATUS.CREATED,
+                transactionType: Config.APP_CONSTANTS.DATABASE.TRANSACTION_TYPE.CONTRACT
             }
             Service.TransactionService.createTransaction(objToSave, function (err, data) {
                 if (err) cb(err)
@@ -143,7 +144,7 @@ var signContract = function (userData, payloadData, callback) {
             })
         },
         function (cb) {
-            if (contract.contractStatus == Config.APP_CONSTANTS.DATABASE.CONTRACT_STATUS.DENIED || contract.contractStatus == Config.APP_CONSTANTS.DATABASE.CONTRACT_STATUS.COMPLETED) {
+            if (contract.contractStatus == Config.APP_CONSTANTS.DATABASE.CONTRACT_STATUS.DENIED || contract.contractStatus == Config.APP_CONSTANTS.DATABASE.CONTRACT_STATUS.INITIATED) {
                 cb(ERROR.INVALID_TRANSACTION);
             }
             else cb();
@@ -181,14 +182,16 @@ var signContract = function (userData, payloadData, callback) {
                 objToSave = {
                     contractId: payloadData.contractId,
                     assignor: userData._id,
-                    transactionStatus: payloadData.signed == true ? Config.APP_CONSTANTS.DATABASE.TRANSACTION_STATUS.COMPLETED : Config.APP_CONSTANTS.DATABASE.TRANSACTION_STATUS.DENIED,
+                    transactionStatus: payloadData.signed == true ? Config.APP_CONSTANTS.DATABASE.TRANSACTION_STATUS.INITIATED : Config.APP_CONSTANTS.DATABASE.TRANSACTION_STATUS.DENIED,
+                    transactionType: Config.APP_CONSTANTS.DATABASE.TRANSACTION_TYPE.CONTRACT
                 }
             }
             else if ((contract.assignees.length != contract.assigneesSigned.length) && String(contract.assignor) != String(userData._id)) {
                 objToSave = {
                     contractId: payloadData.contractId,
-                    assignee: userData._id,
+                    assignee: [userData._id],
                     transactionStatus: payloadData.signed == true ? Config.APP_CONSTANTS.DATABASE.TRANSACTION_STATUS.APPROVED : Config.APP_CONSTANTS.DATABASE.TRANSACTION_STATUS.DENIED,
+                    transactionType: Config.APP_CONSTANTS.DATABASE.TRANSACTION_TYPE.CONTRACT
                 }
             }
             else {
@@ -206,7 +209,7 @@ var signContract = function (userData, payloadData, callback) {
             if (String(contract.assignor) == String(userData._id) && !assignorDenied) {
                 dataToSet = {
                     $set: {
-                        contractStatus: Config.APP_CONSTANTS.DATABASE.CONTRACT_STATUS.COMPLETED,
+                        contractStatus: Config.APP_CONSTANTS.DATABASE.CONTRACT_STATUS.INITIATED,
                         updatedAt: Date.now()
                     }
                 }
@@ -378,10 +381,10 @@ var getContractStatuses = function (userData, callback) {
                 if ((contracts[i].assignees.includes(String(userData._id)) && !contracts[i].assigneesSigned.includes(String(userData._id)) || (String(contracts[i].assignor) == String(userData._id)) && contracts[i].assigneesSigned.length == contracts[i].assignees.length) && contracts[i].contractStatus == Config.APP_CONSTANTS.DATABASE.CONTRACT_STATUS.PROCESSING) {
                     statuses.AwaitingMySignature.push(contracts[i]);
                 }
-                else if (contracts[i].assigneesSigned.includes(String(userData._id)) && (contracts[i].assignees.length > 1) || (String(contracts[i].assignor) == String(userData._id)) && contracts[i].contractStatus == Config.APP_CONSTANTS.DATABASE.CONTRACT_STATUS.PROCESSING) {
+                else if ((contracts[i].assigneesSigned.includes(String(userData._id)) || (String(contracts[i].assignor) == String(userData._id))) && contracts[i].contractStatus == Config.APP_CONSTANTS.DATABASE.CONTRACT_STATUS.PROCESSING) {
                     statuses.WaitingForOthers.push(contracts[i])
                 }
-                else if (contracts[i].assigneesSigned.length == contracts[i].assignees.length && (contracts[i].contractStatus == Config.APP_CONSTANTS.DATABASE.CONTRACT_STATUS.COMPLETED)) {
+                else if (contracts[i].assigneesSigned.length == contracts[i].assignees.length && (contracts[i].contractStatus == Config.APP_CONSTANTS.DATABASE.CONTRACT_STATUS.INITIATED)) {
                     statuses.Completed.push(contracts[i])
                 }
                 else if (contracts[i].contractStatus == Config.APP_CONSTANTS.DATABASE.CONTRACT_STATUS.DENIED) {
@@ -445,7 +448,8 @@ var getContractTimeLineById = function (userData, payloadData, callback) {
         },
         function (cb) {
             var criteria = {
-                contractId: payloadData.contractId
+                contractId: payloadData.contractId,
+                transactionType: Config.APP_CONSTANTS.DATABASE.TRANSACTION_TYPE.CONTRACT
             }
             var path = "assignor assignee";
             var select = "firstName lastName";
