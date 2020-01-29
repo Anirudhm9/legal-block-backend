@@ -7,5 +7,7 @@ module.exports = {
   AdminService: require("./adminService"),
   TemplateLibraryService: require('./templateLibraryService'),
   ContractService: require('./contractService'),
-  TransactionService: require('./transactionService')
+  TransactionService: require('./transactionService'),
+  RequestService: require('./requestService'),
+  ActionService: require('./actionService'),
 };
