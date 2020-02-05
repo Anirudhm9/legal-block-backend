@@ -448,8 +448,8 @@ var getContractTimeLineById = function (userData, payloadData, callback) {
         },
         function (cb) {
             var criteria = {
-                contractId: payloadData.contractId,
-                transactionType: Config.APP_CONSTANTS.DATABASE.TRANSACTION_TYPE.CONTRACT
+                contractId: payloadData.contractId
+                // transactionType: Config.APP_CONSTANTS.DATABASE.TRANSACTION_TYPE.CONTRACT
             }
             var path = "assignor assignee";
             var select = "firstName lastName";

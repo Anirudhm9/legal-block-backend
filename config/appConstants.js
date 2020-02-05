@@ -27,13 +27,16 @@ var DATABASE = {
     PROCESSING: "AWAITING SIGNATURE",
     DENIED: "DENIED",
     INITIATED: "INITIATED",
-    COMPLETED: "COMPLETED"
+    COMPLETED: "COMPLETED",
+    TERMINATED: "TERMINATED"
   },
   TRANSACTION_STATUS: {
     CREATED: "CREATED",
     PROCESSING: "PROCESSING",
     APPROVED: "SIGNED",
+    INITIATED: "INITIATED",
     DENIED: "DENIED",
+    TERMINATED: "TERMINATED",
     COMPLETED: "COMPLETED"
   },
   TRANSACTION_TYPE: {
@@ -248,7 +251,17 @@ var STATUS_MSG = {
       statusCode: 400,
       customMessage: "Invalid assignee",
       type: "INVALID_ASSIGNEE"
-    }
+    },
+    INVALID_CONTRACT_STATE: {
+      statusCode: 400,
+      customMessage: "Invalid state of contract",
+      type: "INVALID_CONTRACT_STATE"
+    },
+    INVALID_TERMINATION_DATE: {
+      statusCode: 400,
+      customMessage: "Invalid termination date",
+      type: "INVALID_TERMINATION_DATE"
+    },
   },
   SUCCESS: {
     DEFAULT: {
