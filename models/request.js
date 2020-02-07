@@ -3,11 +3,19 @@ var Schema = mongoose.Schema;
 var Config = require("../config");
 
 var request = new Schema({
-  requestName: { type: String, trim: true, required: true },
-  requestType: { type: String, trim: true, required: true },
+  requestType: {
+    type: String, enum: [
+      Config.APP_CONSTANTS.DATABASE.ACTION_TYPE.COMPLAIN,
+      Config.APP_CONSTANTS.DATABASE.ACTION_TYPE.MAINTENANCE,
+      Config.APP_CONSTANTS.DATABASE.ACTION_TYPE.QUERY,
+      Config.APP_CONSTANTS.DATABASE.ACTION_TYPE.RESPOND,
+      Config.APP_CONSTANTS.DATABASE.ACTION_TYPE.TERMINATE
+    ]
+  },
   contractId: { type: Schema.ObjectId, ref: 'contracts' },
   requestor: { type: Schema.ObjectId, ref: 'user' },
   respondent: [{ type: Schema.ObjectId, ref: 'user' }],
+  requestInfo: { type: Object },
   requestStatus: {
     type: String, enum: [
       Config.APP_CONSTANTS.DATABASE.TRANSACTION_STATUS.CREATED,

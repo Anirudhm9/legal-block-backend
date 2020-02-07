@@ -32,7 +32,9 @@ var createContract = {
             payload: {
                 contractName: Joi.string().required(),
                 content: Joi.string().required(),
-                contractType: Joi.string().required(),
+                contractType: Joi.string().valid(
+                    Config.APP_CONSTANTS.DATABASE.CONTRACT_TYPE.REAL_ESTATE
+                ).required(),
                 assignees: Joi.array().required(),
             }
         },

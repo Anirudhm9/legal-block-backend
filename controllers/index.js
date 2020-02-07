@@ -10,4 +10,5 @@ module.exports = {
   ContractBaseController: require('./contractController/contractBaseController'),
   RequestBaseController: require('./requestController/requestBaseController'),
   ActionBaseController: require('./actionController/actionBaseController'),
+  RuleBaseController: require('./ruleController/ruleBaseController'),
 };
