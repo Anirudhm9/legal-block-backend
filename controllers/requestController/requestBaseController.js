@@ -119,6 +119,73 @@ var createRequest = function (userData, payloadData, callback) {
   })
 }
 
+var createRequestViaAction = function (payloadData, callback) {
+  var request = null;
+  var assignee = null;
+  var contract = null;
+  async.series([
+    function (cb) {
+      Service.ContractService.getContract({ _id: payloadData.contractId }, {}, {}, function (err, data) {
+        if (err) cb(err)
+        else {
+          if (data.length == 0) {
+            cb(ERROR.INVALID_TRANSACTION);
+          }
+          else {
+            contract = data && data[0] || null;
+            cb();
+          }
+        }
+      })
+    },
+    function (cb) {
+      if (payloadData.userType == Config.APP_CONSTANTS.DATABASE.USER_TYPE.ASSIGNOR) {
+        payloadData.requestor = contract.assignor;
+        payloadData.respondent = contract.assignees;
+      }
+      else {
+        payloadData.respondent = [contract.assignor];
+        payloadData.requestor = payloadData.userId;
+      }
+      payloadData.response = [{
+        user: Config.APP_CONSTANTS.DATABASE.REQUEST_USER_TYPE.REQUESTOR,
+        message: payloadData.message
+      }]
+      payloadData.requestStatus = Config.APP_CONSTANTS.DATABASE.TRANSACTION_STATUS.CREATED;
+      payloadData.dateRequested = Date.now();
+      Service.RequestService.createRequest(payloadData, function (err, data) {
+        if (err) cb(err)
+        else {
+          request = data;
+          cb();
+        }
+      })
+    },
+    function (cb) {
+      console.log("<<<<<<>>>>>>", request)
+      var objToSave = {
+        contractId: payloadData.contractId,
+        assignor: contract.assignor,
+        assignee: contract.assignees,
+        requestId: request._id,
+        transactionStatus: Config.APP_CONSTANTS.DATABASE.TRANSACTION_STATUS.CREATED,
+        transactionType: Config.APP_CONSTANTS.DATABASE.TRANSACTION_TYPE.REQUEST,
+        transactionSubType: payloadData.transactionSubType,
+        requestResponder: payloadData.userId
+      }
+      Service.TransactionService.createTransaction(objToSave, function (err, data) {
+        if (err) cb(err)
+        else {
+          cb();
+        }
+      })
+    },
+  ], function (err, result) {
+    if (err) callback(err)
+    else callback(null, { data: request })
+  })
+}
+
 var getRequests = function (userData, callback) {
   var request = null;
   var contract = null;
@@ -258,15 +325,21 @@ var respondToRequest = function (userData, payloadData, callback) {
     },
     function (cb) {
       var status = null;
-      if (payloadData.approve == "true") {
-        status = Config.APP_CONSTANTS.DATABASE.TRANSACTION_STATUS.APPROVED;
-      }
-      else if (payloadData == "false") {
-        status = Config.APP_CONSTANTS.DATABASE.TRANSACTION_STATUS.DENIED;
+      if (!(String(request.requestor) == String(userData._id))) {
+        if (payloadData.approve == "true") {
+          status = Config.APP_CONSTANTS.DATABASE.TRANSACTION_STATUS.APPROVED;
+        }
+        else if (payloadData == "false") {
+          status = Config.APP_CONSTANTS.DATABASE.TRANSACTION_STATUS.DENIED;
+        }
+        else {
+          status = Config.APP_CONSTANTS.DATABASE.TRANSACTION_STATUS.PROCESSING;
+        }
       }
       else {
-        status = Config.APP_CONSTANTS.DATABASE.TRANSACTION_STATUS.PROCESSING;
+        status = Config.APP_CONSTANTS.DATABASE.TRANSACTION_STATUS.PROCESSING
       }
+
       var criteria = {
         _id: payloadData.requestId
       }
@@ -286,19 +359,26 @@ var respondToRequest = function (userData, payloadData, callback) {
           cb();
         }
       })
+
     },
     function (cb) {
       console.log("<<<<<<<>>>>>>>>", request)
       var status = null;
-      if (payloadData.approve == "true") {
-        status = Config.APP_CONSTANTS.DATABASE.TRANSACTION_STATUS.APPROVED
-      }
-      else if (payloadData.approve == "false") {
-        status = Config.APP_CONSTANTS.DATABASE.TRANSACTION_STATUS.DENIED
+      if (!(String(request.requestor) == String(userData._id))) {
+        if (payloadData.approve == "true") {
+          status = Config.APP_CONSTANTS.DATABASE.TRANSACTION_STATUS.APPROVED
+        }
+        else if (payloadData.approve == "false") {
+          status = Config.APP_CONSTANTS.DATABASE.TRANSACTION_STATUS.DENIED
+        }
+        else {
+          status = Config.APP_CONSTANTS.DATABASE.TRANSACTION_STATUS.PROCESSING
+        }
       }
       else {
         status = Config.APP_CONSTANTS.DATABASE.TRANSACTION_STATUS.PROCESSING
       }
+
       var objToSave = {
         contractId: request.contractId,
         requestId: payloadData.requestId,
@@ -306,7 +386,8 @@ var respondToRequest = function (userData, payloadData, callback) {
         assignor: contract.assignor,
         transactionStatus: status,
         transactionType: Config.APP_CONSTANTS.DATABASE.TRANSACTION_TYPE.REQUEST,
-        requestResponder: userData._id
+        requestResponder: userData._id,
+        transactionSubType: request.requestType,
       }
       Service.TransactionService.createTransaction(objToSave, function (err, data) {
         if (err) cb(err)
@@ -325,5 +406,6 @@ var respondToRequest = function (userData, payloadData, callback) {
 module.exports = {
   createRequest: createRequest,
   getRequests: getRequests,
-  respondToRequest: respondToRequest
+  respondToRequest: respondToRequest,
+  createRequestViaAction: createRequestViaAction
 };

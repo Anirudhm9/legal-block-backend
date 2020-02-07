@@ -30,8 +30,16 @@ var createAction = {
       headers: UniversalFunctions.authorizationHeaderObj,
       failAction: UniversalFunctions.failActionFunction,
       payload: {
-        actionName: Joi.string().required(),
-        contractType: Joi.string().required(),
+        actionName: Joi.string().valid(
+          Config.APP_CONSTANTS.DATABASE.ACTION_TYPE.COMPLAIN,
+          Config.APP_CONSTANTS.DATABASE.ACTION_TYPE.MAINTENANCE,
+          Config.APP_CONSTANTS.DATABASE.ACTION_TYPE.QUERY,
+          Config.APP_CONSTANTS.DATABASE.ACTION_TYPE.RESPOND,
+          Config.APP_CONSTANTS.DATABASE.ACTION_TYPE.TERMINATE
+        ),
+        contractType: Joi.string().valid(
+          Config.APP_CONSTANTS.DATABASE.CONTRACT_TYPE.REAL_ESTATE
+        ).required(),
         userType: Joi.array().items(Joi.string().valid([
           Config.APP_CONSTANTS.DATABASE.USER_TYPE.ASSIGNEE,
           Config.APP_CONSTANTS.DATABASE.USER_TYPE.ASSIGNOR,
@@ -43,7 +51,8 @@ var createAction = {
               type: Joi.string().required()
             }
           ).required()
-        )
+        ),
+        rules: Joi.array().items(Joi.string())
       }
     },
     plugins: {
@@ -122,7 +131,13 @@ var updateAction = {
       failAction: UniversalFunctions.failActionFunction,
       payload: {
         actionId: Joi.string().required(),
-        actionName: Joi.string().required(),
+        actionName: Joi.string().valid(
+          Config.APP_CONSTANTS.DATABASE.ACTION_TYPE.COMPLAIN,
+          Config.APP_CONSTANTS.DATABASE.ACTION_TYPE.MAINTENANCE,
+          Config.APP_CONSTANTS.DATABASE.ACTION_TYPE.QUERY,
+          Config.APP_CONSTANTS.DATABASE.ACTION_TYPE.RESPOND,
+          Config.APP_CONSTANTS.DATABASE.ACTION_TYPE.TERMINATE
+        ),
         contractType: Joi.string().required(),
         userType: Joi.array().items(Joi.string().valid([
           Config.APP_CONSTANTS.DATABASE.USER_TYPE.ASSIGNEE,
@@ -185,10 +200,51 @@ var deleteAction = {
     }
   }
 };
+
+var executeAction = {
+  method: "POST",
+  path: "/api/actions/executeAction",
+  handler: function (request, h) {
+    var userData =
+      (request.auth &&
+        request.auth.credentials &&
+        request.auth.credentials.userData) ||
+      null;
+    return new Promise((resolve, reject) => {
+      Controller.ActionBaseController.executeAction(userData, request.payload, function (err, data) {
+        if (!err) {
+          resolve(UniversalFunctions.sendSuccess(null, data));
+        } else {
+          reject(UniversalFunctions.sendError(err));
+        }
+      });
+    });
+  },
+  config: {
+    description: "Execute Action",
+    tags: ["api", "action"],
+    auth: "UserAuth",
+    validate: {
+      headers: UniversalFunctions.authorizationHeaderObj,
+      failAction: UniversalFunctions.failActionFunction,
+      payload: {
+        actionId: Joi.string().required(),
+        keysRequired: Joi.object().required()
+      }
+    },
+    plugins: {
+      "hapi-swagger": {
+        responseMessages:
+          UniversalFunctions.CONFIG.APP_CONSTANTS.swaggerDefaultResponseMessages
+      }
+    }
+  }
+};
 var ActionBaseRoute = [
   createAction,
   getActions,
   updateAction,
-  deleteAction
+  deleteAction,
+  executeAction
 ];
 module.exports = ActionBaseRoute;

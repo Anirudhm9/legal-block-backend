@@ -37,7 +37,8 @@ var DATABASE = {
     INITIATED: "INITIATED",
     DENIED: "DENIED",
     TERMINATED: "TERMINATED",
-    COMPLETED: "COMPLETED"
+    COMPLETED: "COMPLETED",
+    FAILATTEMPT: "FAILATTEMPT"
   },
   TRANSACTION_TYPE: {
     CONTRACT: "CONTRACT",
@@ -50,6 +51,21 @@ var DATABASE = {
   USER_TYPE: {
     ASSIGNOR: "ASSIGNOR",
     ASSIGNEE: "ASSIGNEE"
+  },
+  ACTION_TYPE: {
+    TERMINATE: "TERMINATE",
+    COMPLAIN: "COMPLAIN",
+    MAINTENANCE: "MAINTENANCE",
+    RESPOND: "RESPOND",
+    QUERY: "QUERY"
+  },
+  CONTRACT_TYPE: {
+    REAL_ESTATE: "REAL_ESTATE",
+  },
+  RULES: {
+    CHECKEXPIRY: "CHECKEXPIRY",
+    CALCULATEFINE: "CALCULATEFINE",
+    CHECKINTERVAL: "CHECKINTERVAL"
   }
 };
 
@@ -254,13 +270,18 @@ var STATUS_MSG = {
     },
     INVALID_CONTRACT_STATE: {
       statusCode: 400,
-      customMessage: "Invalid state of contract",
+      customMessage: "Invalid state of contract. Contract should be in Initiated state.",
       type: "INVALID_CONTRACT_STATE"
     },
     INVALID_TERMINATION_DATE: {
       statusCode: 400,
-      customMessage: "Invalid termination date",
+      customMessage: "Invalid termination date. Termination date should be atleast 30 days from the date of submission.",
       type: "INVALID_TERMINATION_DATE"
+    },
+    INVALID_REQUEST: {
+      statusCode: 400,
+      customMessage: "Invalid request. Complains can only be made in intervals of a day",
+      type: "INVALID_REQUEST"
     },
   },
   SUCCESS: {

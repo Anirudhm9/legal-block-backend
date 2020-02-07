@@ -30,8 +30,13 @@ var createRequest = {
       headers: UniversalFunctions.authorizationHeaderObj,
       failAction: UniversalFunctions.failActionFunction,
       payload: {
-        requestName: Joi.string().required(),
-        requestType: Joi.string().required(),
+        requestType: Joi.string().valid(
+          Config.APP_CONSTANTS.DATABASE.ACTION_TYPE.COMPLAIN,
+          Config.APP_CONSTANTS.DATABASE.ACTION_TYPE.MAINTENANCE,
+          Config.APP_CONSTANTS.DATABASE.ACTION_TYPE.QUERY,
+          Config.APP_CONSTANTS.DATABASE.ACTION_TYPE.RESPOND,
+          Config.APP_CONSTANTS.DATABASE.ACTION_TYPE.TERMINATE
+        ),
         contractId: Joi.string().required(),
         message: Joi.string().required(),
       }
@@ -110,7 +115,7 @@ var respondToRequest = {
       payload: {
         requestId: Joi.string().required(),
         message: Joi.string().required(),
-        approve: Joi.string().valid(["true","false","other"])
+        approve: Joi.string().valid(["true", "false", "other"])
       }
     },
     plugins: {
