@@ -26,13 +26,15 @@ var action = new Schema({
       type: { type: String, trim: true }
     }
   ],
-  rules: {
-    type: String, enum: [
-      Config.APP_CONSTANTS.DATABASE.RULES.CALCULATEFINE,
-      Config.APP_CONSTANTS.DATABASE.RULES.CHECKEXPIRY,
-      Config.APP_CONSTANTS.DATABASE.RULES.CHECKINTERVAL,
-    ]
-  }
+  rules: [
+    {
+      type: String, enum: [
+        Config.APP_CONSTANTS.DATABASE.RULES.CALCULATEFINE,
+        Config.APP_CONSTANTS.DATABASE.RULES.CHECKEXPIRY,
+        Config.APP_CONSTANTS.DATABASE.RULES.CHECKINTERVAL,
+      ]
+    }
+  ]
 });
 
 module.exports = mongoose.model("action", action);
