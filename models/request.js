@@ -15,7 +15,10 @@ var request = new Schema({
   contractId: { type: Schema.ObjectId, ref: 'contracts' },
   requestor: { type: Schema.ObjectId, ref: 'user' },
   respondent: [{ type: Schema.ObjectId, ref: 'user' }],
-  requestInfo: { type: Object },
+  requestInfo: [
+    { type: Object }
+  ],
+  request: { type: Object },
   requestStatus: {
     type: String, enum: [
       Config.APP_CONSTANTS.DATABASE.TRANSACTION_STATUS.CREATED,

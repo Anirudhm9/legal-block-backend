@@ -20,6 +20,7 @@ var transaction = new Schema({
       Config.APP_CONSTANTS.DATABASE.TRANSACTION_STATUS.FAILATTEMPT
     ]
   },
+  failAttempt: { type: String },
   requestResponder: { type: Schema.ObjectId, ref: 'user' },
   transactionType: {
     type: String, enum: [

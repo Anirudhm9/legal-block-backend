@@ -41,7 +41,7 @@ var RULES = {
   }
 };
 
-var failTransaction = function (payloadData, callback) {
+var failTransaction = function (payloadData, errorData, callback) {
   var contract = null;
   async.series([
     function (cb) {
@@ -61,7 +61,8 @@ var failTransaction = function (payloadData, callback) {
         transactionStatus: Config.APP_CONSTANTS.DATABASE.TRANSACTION_STATUS.FAILATTEMPT,
         transactionType: Config.APP_CONSTANTS.DATABASE.TRANSACTION_TYPE.REQUEST,
         transactionSubType: payloadData.transactionSubType,
-        requestResponder: payloadData.userId
+        requestResponder: payloadData.userId,
+        failAttempt: errorData
       }
       Service.TransactionService.createTransaction(objToSave, function (err, data) {
         if (err) cb(err)
@@ -97,7 +98,7 @@ var CHECKEXPIRY = function (payloadData, callback) {
         cb();
       }
       else {
-        failTransaction(payloadData, function (err, data) {
+        failTransaction(payloadData, INVALID_CONTRACT_STATE.customMessage, function (err, data) {
           if (err) cb(err)
           else cb(ERROR.INVALID_CONTRACT_STATE);
         })
@@ -107,7 +108,8 @@ var CHECKEXPIRY = function (payloadData, callback) {
     function (cb) {
       var date = new Date();
       if ((leaseEndDate < terminationDate) || (date > terminationDate) || ((terminationDate.getTime() - date.getTime()) / (1000 * 3600 * 24)) < 30) {
-        failTransaction(payloadData, function (err, data) {
+
+        failTransaction(payloadData, ERROR.INVALID_TERMINATION_DATE.customMessage, function (err, data) {
           if (err) cb(err)
           else cb(ERROR.INVALID_TERMINATION_DATE);
         })
@@ -179,7 +181,7 @@ var CHECKINTERVAL = function (payloadData, callback) {
         cb();
       }
       else {
-        failTransaction(payloadData, function (err, data) {
+        failTransaction(payloadData, ERROR.INVALID_CONTRACT_STATE.customMessage, function (err, data) {
           if (err) cb(err)
           else cb(ERROR.INVALID_CONTRACT_STATE);
         })
@@ -189,7 +191,7 @@ var CHECKINTERVAL = function (payloadData, callback) {
     function (cb) {
       var date = new Date();
       var criteria = {
-        transactionSubType: Config.APP_CONSTANTS.DATABASE.ACTION_TYPE.COMPLAIN,
+        transactionSubType: payloadData.transactionSubType,
         transactionStatus: Config.APP_CONSTANTS.DATABASE.TRANSACTION_STATUS.CREATED,
         requestResponder: payloadData.userId,
       }
@@ -201,8 +203,8 @@ var CHECKINTERVAL = function (payloadData, callback) {
             cb();
           }
           else {
-            if (((data[0].date.getTime() - date.getTime()) / (1000 * 3600 * 24)) < 24) {
-              failTransaction(payloadData, function (err, data) {
+            if (((data[0].date.getTime() - date.getTime()) / (1000 * 3600 * 24)) <= 1) {
+              failTransaction(payloadData, ERROR.INVALID_REQUEST.customMessage, function (err, data) {
                 if (err) cb(err)
                 else {
                   cb(ERROR.INVALID_REQUEST);
