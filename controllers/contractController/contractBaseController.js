@@ -299,6 +299,56 @@ var getContractById = function (userData, payloadData, callback) {
     })
 }
 
+var getContractByIdForAdmin = function (userData, payloadData, callback) {
+    var contracts = null;
+    async.series([
+
+        function (cb) {
+            var criteria = {
+                _id: userData._id,
+            };
+            Service.AdminService.getAdmin(criteria, { password: 0 }, {}, function (err, data) {
+                if (err) cb(err);
+                else {
+                    if (data.length == 0) cb(ERROR.INCORRECT_ACCESSTOKEN);
+                    else {
+                        userFound = (data && data[0]) || null;
+                        cb();
+                    }
+                }
+            });
+        },
+        function (cb) {
+            var criteria = {
+                _id: payloadData.contractId
+            }
+            var path = "assignor assignees assigneesSigned";
+            var select = "firstName lastName";
+            var populate = {
+                path: path,
+                match: {},
+                select: select,
+                options: {
+                    lean: true
+                }
+            };
+            var projection = {
+                __v: 0,
+            };
+            Service.ContractService.getPopulatedUsers(criteria, projection, populate, {}, {}, function (err, data) {
+                if (err) cb(err)
+                else {
+                    contracts = data && data[0];
+                    cb();
+                }
+            })
+        },
+    ], function (err, result) {
+        if (err) callback(err)
+        else callback(null, { data: contracts })
+    })
+}
+
 var getContractStatuses = function (userData, callback) {
     var contracts = null;
     var statuses = {
@@ -431,6 +481,76 @@ var getContractTimeLineById = function (userData, payloadData, callback) {
                         }
                     }
                 ]
+            }
+            Service.ContractService.getContract(criteria, {}, {}, function (err, data) {
+                if (err) cb(err)
+                else {
+                    if (data && data.length == 0) {
+                        cb(ERROR.INVALID_TRANSACTION)
+                    }
+                    else {
+                        contract = data && data[0] || null;
+                        console.log(contract)
+                        cb();
+                    }
+                }
+            })
+        },
+        function (cb) {
+            var criteria = {
+                contractId: payloadData.contractId
+                // transactionType: Config.APP_CONSTANTS.DATABASE.TRANSACTION_TYPE.CONTRACT
+            }
+            var path = "assignor assignee";
+            var select = "firstName lastName";
+            var populate = {
+                path: path,
+                match: {},
+                select: select,
+                options: {
+                    lean: true
+                }
+            };
+            var projection = {
+                __v: 0,
+            };
+            Service.TransactionService.getPopulatedUsers(criteria, projection, populate, {}, {}, function (err, data) {
+                if (err) cb(err)
+                else {
+                    transactions = data;
+                    cb();
+                }
+            })
+        },
+    ], function (err, result) {
+        if (err) callback(err)
+        else callback(null, { data: transactions })
+    })
+}
+
+
+var getContractTimeLineByIdForAdmin = function (userData, payloadData, callback) {
+    var transactions = null;
+    async.series([
+
+        function (cb) {
+            var criteria = {
+                _id: userData._id,
+            };
+            Service.AdminService.getAdmin(criteria, { password: 0 }, {}, function (err, data) {
+                if (err) cb(err);
+                else {
+                    if (data.length == 0) cb(ERROR.INCORRECT_ACCESSTOKEN);
+                    else {
+                        userFound = (data && data[0]) || null;
+                        cb();
+                    }
+                }
+            });
+        },
+        function (cb) {
+            var criteria = {
+                _id: payloadData.contractId
             }
             Service.ContractService.getContract(criteria, {}, {}, function (err, data) {
                 if (err) cb(err)
@@ -763,5 +883,7 @@ module.exports = {
     signContract: signContract,
     getContractById: getContractById,
     getContractTimeLineById: getContractTimeLineById,
-    getContractStatuses: getContractStatuses
+    getContractStatuses: getContractStatuses,
+    getContractByIdForAdmin: getContractByIdForAdmin,
+    getContractTimeLineByIdForAdmin: getContractTimeLineByIdForAdmin
 };
