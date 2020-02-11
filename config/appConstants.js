@@ -280,7 +280,7 @@ var STATUS_MSG = {
     },
     INVALID_REQUEST: {
       statusCode: 400,
-      customMessage: "Invalid request. Complains can only be made in intervals of a day",
+      customMessage: "Invalid request. This request can only be made in intervals of a day",
       type: "INVALID_REQUEST"
     },
   },

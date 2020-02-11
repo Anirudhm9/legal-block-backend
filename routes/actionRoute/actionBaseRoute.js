@@ -52,7 +52,12 @@ var createAction = {
             }
           ).required()
         ),
-        rules: Joi.array().items(Joi.string())
+        rules: Joi.array().items(
+          Joi.string().valid([
+          Config.APP_CONSTANTS.DATABASE.RULES.CALCULATEFINE,
+          Config.APP_CONSTANTS.DATABASE.RULES.CHECKEXPIRY,
+          Config.APP_CONSTANTS.DATABASE.RULES.CHECKINTERVAL]
+        ))
       }
     },
     plugins: {

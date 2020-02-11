@@ -203,8 +203,7 @@ var executeAction = function (userData, payloadData, callback) {
   var assignee = null;
   var user = null;
   var output = [];
-  var fine = 0;
-  var requestInfo = {};
+  var requestInfo = [];
   var outcome = false;
   async.series([
 
@@ -301,8 +300,8 @@ var executeAction = function (userData, payloadData, callback) {
                   else {
                     data.condition = Controller.RULES[actions.rules[j]].condition;
                     output.push(data)
-                    var count = parseInt(j) + 1;
-                    requestInfo['ruleData' + (count).toString()] = data;
+                    data.type = actions.rules[j];
+                    requestInfo.push(data);
                     DATA = { userId: userFound._id, transactionSubType: actions.actionName };
                     embeddedCB()
                   }
@@ -318,7 +317,10 @@ var executeAction = function (userData, payloadData, callback) {
     },
     function (cb) {
       if (actions.actionName != Config.APP_CONSTANTS.DATABASE.ACTION_TYPE.RESPOND) {
-        var requestData = payloadData.keysRequired;
+        var requestData ={};
+        requestData.contractId =  payloadData.keysRequired.contractId;
+        requestData.message =  payloadData.keysRequired.message;
+        requestData.request = payloadData.keysRequired;
         requestData.requestType = actions.actionName;
         requestData.userType = user;
         requestData.userId = userFound._id;

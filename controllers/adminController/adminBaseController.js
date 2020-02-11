@@ -905,11 +905,16 @@ var getNumberOfDocuments = function (userData, callback) {
       })
     },
     function (cb) {
-      DATA.push({ requests: 0 })
-      cb();
+      Service.RequestService.getRequest({}, {}, {}, function (err, data) {
+        if (err) cb(err)
+        else {
+          DATA.push({ Requests: data.length });
+          cb();
+        }
+      })
     },
     function (cb) {
-      DATA.push({ rules: 0 })
+      DATA.push({ Rules: Object.keys(Config.APP_CONSTANTS.DATABASE.RULES).length })
       cb();
     }
     // TODO: requests

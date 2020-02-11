@@ -158,6 +158,45 @@ var getContractById = {
     }
 };
 
+var getContractByIdForAdmin = {
+    method: "POST",
+    path: "/api/contracts/admin/getContractById",
+    handler: function (request, h) {
+        var userData =
+            (request.auth &&
+                request.auth.credentials &&
+                request.auth.credentials.userData) ||
+            null;
+        return new Promise((resolve, reject) => {
+            Controller.ContractBaseController.getContractByIdForAdmin(userData, request.payload, function (err, data) {
+                if (!err) {
+                    resolve(UniversalFunctions.sendSuccess(null, data));
+                } else {
+                    reject(UniversalFunctions.sendError(err));
+                }
+            });
+        });
+    },
+    config: {
+        description: "Get contract by Id",
+        tags: ["api", "contracts"],
+        auth: "UserAuth",
+        validate: {
+            headers: UniversalFunctions.authorizationHeaderObj,
+            failAction: UniversalFunctions.failActionFunction,
+            payload: {
+                contractId: Joi.string().required()
+            }
+        },
+        plugins: {
+            "hapi-swagger": {
+                responseMessages:
+                    UniversalFunctions.CONFIG.APP_CONSTANTS.swaggerDefaultResponseMessages
+            }
+        }
+    }
+};
+
 var getContractTimeLineById = {
     method: "POST",
     path: "/api/transactions/getContractTimeLineById",
@@ -169,6 +208,45 @@ var getContractTimeLineById = {
             null;
         return new Promise((resolve, reject) => {
             Controller.ContractBaseController.getContractTimeLineById(userData, request.payload, function (err, data) {
+                if (!err) {
+                    resolve(UniversalFunctions.sendSuccess(null, data));
+                } else {
+                    reject(UniversalFunctions.sendError(err));
+                }
+            });
+        });
+    },
+    config: {
+        description: "Get Contract TimeLine By Id",
+        tags: ["api", "contracts"],
+        auth: "UserAuth",
+        validate: {
+            headers: UniversalFunctions.authorizationHeaderObj,
+            failAction: UniversalFunctions.failActionFunction,
+            payload: {
+                contractId: Joi.string().required()
+            }
+        },
+        plugins: {
+            "hapi-swagger": {
+                responseMessages:
+                    UniversalFunctions.CONFIG.APP_CONSTANTS.swaggerDefaultResponseMessages
+            }
+        }
+    }
+};
+
+var getContractTimeLineByIdForAdmin = {
+    method: "POST",
+    path: "/api/admin/transactions/getContractTimeLineById",
+    handler: function (request, h) {
+        var userData =
+            (request.auth &&
+                request.auth.credentials &&
+                request.auth.credentials.userData) ||
+            null;
+        return new Promise((resolve, reject) => {
+            Controller.ContractBaseController.getContractTimeLineByIdForAdmin(userData, request.payload, function (err, data) {
                 if (!err) {
                     resolve(UniversalFunctions.sendSuccess(null, data));
                 } else {
@@ -400,6 +478,8 @@ var ContractBaseRoute = [
     signContract,
     getContractById,
     getContractTimeLineById,
-    getContractStatuses
+    getContractStatuses,
+    getContractByIdForAdmin,
+    getContractTimeLineByIdForAdmin
 ];
 module.exports = ContractBaseRoute;
