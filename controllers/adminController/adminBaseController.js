@@ -874,7 +874,7 @@ var getNumberOfDocuments = function (userData, callback) {
       Service.ContractService.getAggregateContracts(criteria, function (err, data) {
         if (err) cb(err)
         else {
-          DATA.push({ Contracts: data.length });
+          DATA.push({ 'Contracts Types': data.length });
           cb();
         }
       })
@@ -890,7 +890,7 @@ var getNumberOfDocuments = function (userData, callback) {
       Service.TemplateLibraryService.getAggregateTemplates(criteria, function (err, data) {
         if (err) cb(err)
         else {
-          DATA.push({ Templates: data.length });
+          DATA.push({ 'Templates Types': data.length });
           cb();
         }
       })

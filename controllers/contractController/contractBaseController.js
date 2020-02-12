@@ -7,6 +7,7 @@ var ERROR = UniversalFunctions.CONFIG.APP_CONSTANTS.STATUS_MSG.ERROR;
 var _ = require("underscore");
 var Config = require("../../config");
 var NodeMailer = require('../../lib/nodeMailer');
+const crypto = require('crypto');
 
 var createContract = function (userData, payloadData, callback) {
     var contract = null;
@@ -517,7 +518,13 @@ var getContractTimeLineById = function (userData, payloadData, callback) {
             Service.TransactionService.getPopulatedUsers(criteria, projection, populate, {}, {}, function (err, data) {
                 if (err) cb(err)
                 else {
-                    transactions = data;
+                    var newData = [];
+                    _.map(data, function (item) {
+                        var hash = (crypto.createHmac('sha256', process.env.JWT_SECRET_KEY).update(String(item._id)).digest('hex'));
+                        var obj = {...item._doc, hash: hash.toUpperCase()}
+                        newData.push(obj);
+                    })
+                    transactions = newData;
                     cb();
                 }
             })
@@ -587,7 +594,13 @@ var getContractTimeLineByIdForAdmin = function (userData, payloadData, callback)
             Service.TransactionService.getPopulatedUsers(criteria, projection, populate, {}, {}, function (err, data) {
                 if (err) cb(err)
                 else {
-                    transactions = data;
+                    var newData = [];
+                    _.map(data, function (item) {
+                        var hash = (crypto.createHmac('sha256', process.env.JWT_SECRET_KEY).update(String(item._id)).digest('hex'));
+                        var obj = {...item._doc, hash: hash.toUpperCase()}
+                        newData.push(obj);
+                    })
+                    transactions = newData;
                     cb();
                 }
             })
