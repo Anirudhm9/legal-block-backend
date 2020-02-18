@@ -191,9 +191,11 @@ var CHECKINTERVAL = function (payloadData, callback) {
     function (cb) {
       var date = new Date();
       var criteria = {
+        transactionType: Config.APP_CONSTANTS.DATABASE.TRANSACTION_TYPE.REQUEST,
         transactionSubType: payloadData.transactionSubType,
         transactionStatus: Config.APP_CONSTANTS.DATABASE.TRANSACTION_STATUS.CREATED,
         requestResponder: payloadData.userId,
+        contractId: payloadData.contractId
       }
       Service.TransactionService.getTransaction(criteria, {}, {}, function (err, data) {
         if (err) cb(err)
