@@ -86,6 +86,45 @@ var getRequests = {
   }
 };
 
+var getRequestById = {
+  method: "POST",
+  path: "/api/requests/getRequestById",
+  handler: function (request, h) {
+    var userData =
+      (request.auth &&
+        request.auth.credentials &&
+        request.auth.credentials.userData) ||
+      null;
+    return new Promise((resolve, reject) => {
+      Controller.RequestBaseController.getRequestById(userData, request.payload, function (err, data) {
+        if (!err) {
+          resolve(UniversalFunctions.sendSuccess(null, data));
+        } else {
+          reject(UniversalFunctions.sendError(err));
+        }
+      });
+    });
+  },
+  config: {
+    description: "get Request By Id",
+    tags: ["api", "request"],
+    validate: {
+      headers: UniversalFunctions.authorizationHeaderObj,
+      failAction: UniversalFunctions.failActionFunction,
+      payload: {
+        requestId: Joi.string().required()
+      }
+    },
+    auth: "UserAuth",
+    plugins: {
+      "hapi-swagger": {
+        responseMessages:
+          UniversalFunctions.CONFIG.APP_CONSTANTS.swaggerDefaultResponseMessages
+      }
+    }
+  }
+};
+
 var respondToRequest = {
   method: "PUT",
   path: "/api/requests/respondToRequest",
@@ -129,6 +168,7 @@ var respondToRequest = {
 var RequestBaseRoute = [
   createRequest,
   getRequests,
-  respondToRequest
+  respondToRequest,
+  getRequestById
 ];
 module.exports = RequestBaseRoute;

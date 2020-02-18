@@ -37,7 +37,8 @@ var request = new Schema({
         ]
       },
       message: { type: String, trim: true, required: true },
-      date: { type: Date, default: Date.now }
+      date: { type: Date, default: Date.now },
+      userId: { type: Schema.ObjectId, ref: 'user' }
     }
   ],
   dateRequested: { type: Date, default: Date.now },

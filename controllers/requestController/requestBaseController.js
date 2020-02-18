@@ -149,7 +149,8 @@ var createRequestViaAction = function (payloadData, callback) {
       }
       payloadData.response = [{
         user: Config.APP_CONSTANTS.DATABASE.REQUEST_USER_TYPE.REQUESTOR,
-        message: payloadData.message
+        message: payloadData.message,
+        userId: payloadData.userId
       }]
       payloadData.requestStatus = Config.APP_CONSTANTS.DATABASE.TRANSACTION_STATUS.CREATED;
       payloadData.dateRequested = Date.now();
@@ -225,9 +226,65 @@ var getRequests = function (userData, callback) {
             _id: '$contractId',
             requests: { $push: "$$ROOT" }
           }
+        },
+        {
+          $project: {
+            'requests.requestInfo': 0,
+            'requests.response': 0,
+          }
         }
       ]
       Service.RequestService.getAggregateRequest(criteria, function (err, data) {
+        if (err) cb(err)
+        else {
+          request = data;
+          cb();
+        }
+      })
+    },
+  ], function (err, result) {
+    if (err) callback(err)
+    else callback(null, { data: request })
+  })
+}
+
+var getRequestById = function (userData, payloadData, callback) {
+  var request = null;
+  var contract = null;
+  async.series([
+    function (cb) {
+      var criteria = {
+        _id: userData._id
+      };
+      Service.UserService.getUser(criteria, { password: 0 }, {}, function (err, data) {
+        if (err) cb(err);
+        else {
+          if (data.length == 0) cb(ERROR.INCORRECT_ACCESSTOKEN);
+          else {
+            userFound = (data && data[0]) || null;
+            cb();
+          }
+        }
+      });
+    },
+    function (cb) {
+      var criteria = {
+        _id: payloadData.requestId,
+      }
+      var path = "response.userId";
+      var select = "firstName lastName";
+      var populate = {
+        path: path,
+        match: {},
+        select: select,
+        options: {
+          lean: true
+        }
+      };
+      var projection = {
+        __v: 0
+      };
+      Service.RequestService.getPopulatedUsers(criteria, projection, populate, {}, {}, function (err, data) {
         if (err) cb(err)
         else {
           request = data;
@@ -315,11 +372,13 @@ var respondToRequest = function (userData, payloadData, callback) {
     function (cb) {
       if (String(request.requestor) == String(userData._id)) {
         response.user = Config.APP_CONSTANTS.DATABASE.REQUEST_USER_TYPE.REQUESTOR;
-        response.message = payloadData.message
+        response.message = payloadData.message;
+        response.userId = userFound._id;
       }
       else {
         response.user = Config.APP_CONSTANTS.DATABASE.REQUEST_USER_TYPE.RESPONDENT;
         response.message = payloadData.message
+        response.userId = userFound._id;
       }
       cb();
     },
@@ -407,5 +466,6 @@ module.exports = {
   createRequest: createRequest,
   getRequests: getRequests,
   respondToRequest: respondToRequest,
-  createRequestViaAction: createRequestViaAction
+  createRequestViaAction: createRequestViaAction,
+  getRequestById: getRequestById
 };
