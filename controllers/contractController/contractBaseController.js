@@ -129,7 +129,8 @@ var signContract = function (userData, payloadData, callback) {
                             $in: [userData._id]
                         }
                     }
-                ]
+                ],
+                assigneesSigned: { $ne: userData._id }
             }
             Service.ContractService.getContract(criteria, {}, {}, function (err, data) {
                 if (err) cb(err)
