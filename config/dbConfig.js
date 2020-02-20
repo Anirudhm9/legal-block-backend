@@ -1,18 +1,13 @@
-/**
- * Created by Navit
- */
-
- 'use strict';
+'use strict';
 
 var mongo = {
-    URI: process.env.MONGO_URI || 'mongodb://localhost/Legal_Block',
-    //URI: process.env.MONGO_URI || "mongodb://"+process.env.MONGO_USER+":"+process.env.MONGO_PASS+"@localhost/"+process.env.MONGO_DBNAME_DEV,
-    port: 27017
+  //URI: process.env.MONGO_URI || 'mongodb://localhost/refugees',
+  URI: process.env.MONGO_URI || "mongodb://"+process.env.MONGO_USER+":"+process.env.MONGO_PASS+"@a064ca00-3e8f-4940-a0ca-18ca35c6fff9-0.22868e325a8b40b6840ed9895f3bb023.databases.appdomain.cloud:31051,a064ca00-3e8f-4940-a0ca-18ca35c6fff9-1.22868e325a8b40b6840ed9895f3bb023.databases.appdomain.cloud:31051/legalblockdb?authSource=admin&replicaSet=replset",
+  port: 27017
 };
 
 module.exports = {
-    mongo: mongo
+  mongo: mongo
 };
-
 
 
