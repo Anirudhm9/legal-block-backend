@@ -44,6 +44,15 @@ var createAction = {
           Config.APP_CONSTANTS.DATABASE.USER_TYPE.ASSIGNEE,
           Config.APP_CONSTANTS.DATABASE.USER_TYPE.ASSIGNOR,
         ])),
+        onStatus: Joi.array().items(
+          Joi.string().valid([
+            Config.APP_CONSTANTS.DATABASE.CONTRACT_STATUS.PROCESSING,
+            Config.APP_CONSTANTS.DATABASE.CONTRACT_STATUS.COMPLETED,
+            Config.APP_CONSTANTS.DATABASE.CONTRACT_STATUS.DENIED,
+            Config.APP_CONSTANTS.DATABASE.CONTRACT_STATUS.INITIATED,
+            Config.APP_CONSTANTS.DATABASE.CONTRACT_STATUS.TERMINATED
+          ])
+        ),
         keysRequired: Joi.array().items(
           Joi.object(
             {
@@ -54,10 +63,10 @@ var createAction = {
         ),
         rules: Joi.array().items(
           Joi.string().valid([
-          Config.APP_CONSTANTS.DATABASE.RULES.CALCULATEFINE,
-          Config.APP_CONSTANTS.DATABASE.RULES.CHECKEXPIRY,
-          Config.APP_CONSTANTS.DATABASE.RULES.CHECKINTERVAL]
-        ))
+            Config.APP_CONSTANTS.DATABASE.RULES.CALCULATEFINE,
+            Config.APP_CONSTANTS.DATABASE.RULES.CHECKEXPIRY,
+            Config.APP_CONSTANTS.DATABASE.RULES.CHECKINTERVAL]
+          ))
       }
     },
     plugins: {
@@ -144,6 +153,15 @@ var updateAction = {
           Config.APP_CONSTANTS.DATABASE.ACTION_TYPE.TERMINATE
         ),
         contractType: Joi.string().required(),
+        onStatus: Joi.array().items(
+          Joi.string().valid([
+            Config.APP_CONSTANTS.DATABASE.CONTRACT_STATUS.PROCESSING,
+            Config.APP_CONSTANTS.DATABASE.CONTRACT_STATUS.COMPLETED,
+            Config.APP_CONSTANTS.DATABASE.CONTRACT_STATUS.DENIED,
+            Config.APP_CONSTANTS.DATABASE.CONTRACT_STATUS.INITIATED,
+            Config.APP_CONSTANTS.DATABASE.CONTRACT_STATUS.TERMINATED
+          ])
+        ),
         userType: Joi.array().items(Joi.string().valid([
           Config.APP_CONSTANTS.DATABASE.USER_TYPE.ASSIGNEE,
           Config.APP_CONSTANTS.DATABASE.USER_TYPE.ASSIGNOR,
