@@ -468,6 +468,85 @@ var deleteContract = {
         }
     }
 };
+
+var raiseToRegulator = {
+    method: "PUT",
+    path: "/api/contracts/raiseToRegulator",
+    handler: function (request, h) {
+        var userData =
+            (request.auth &&
+                request.auth.credentials &&
+                request.auth.credentials.userData) ||
+            null;
+        return new Promise((resolve, reject) => {
+            Controller.ContractBaseController.raiseToRegulator(userData, request.payload, function (err, data) {
+                if (!err) {
+                    resolve(UniversalFunctions.sendSuccess(null, data));
+                } else {
+                    reject(UniversalFunctions.sendError(err));
+                }
+            });
+        });
+    },
+    config: {
+        description: "Raise matter to regulator",
+        tags: ["api", "contracts"],
+        auth: "UserAuth",
+        validate: {
+            headers: UniversalFunctions.authorizationHeaderObj,
+            failAction: UniversalFunctions.failActionFunction,
+            payload: {
+                contractId: Joi.string().required(),
+            }
+        },
+        plugins: {
+            "hapi-swagger": {
+                responseMessages:
+                    UniversalFunctions.CONFIG.APP_CONSTANTS.swaggerDefaultResponseMessages
+            }
+        }
+    }
+};
+
+var respondToContract = {
+    method: "PUT",
+    path: "/api/admin/contracts/respondToContract",
+    handler: function (request, h) {
+        var userData =
+            (request.auth &&
+                request.auth.credentials &&
+                request.auth.credentials.userData) ||
+            null;
+        return new Promise((resolve, reject) => {
+            Controller.ContractBaseController.respondToContract(userData, request.payload, function (err, data) {
+                if (!err) {
+                    resolve(UniversalFunctions.sendSuccess(null, data));
+                } else {
+                    reject(UniversalFunctions.sendError(err));
+                }
+            });
+        });
+    },
+    config: {
+        description: "Respond To critical Contract",
+        tags: ["api", "contracts"],
+        auth: "UserAuth",
+        validate: {
+            headers: UniversalFunctions.authorizationHeaderObj,
+            failAction: UniversalFunctions.failActionFunction,
+            payload: {
+                contractId: Joi.string().required(),
+            }
+        },
+        plugins: {
+            "hapi-swagger": {
+                responseMessages:
+                    UniversalFunctions.CONFIG.APP_CONSTANTS.swaggerDefaultResponseMessages
+            }
+        }
+    }
+};
+
 var ContractBaseRoute = [
     createContract,
     getContractsYouAssigned,
@@ -480,6 +559,8 @@ var ContractBaseRoute = [
     getContractTimeLineById,
     getContractStatuses,
     getContractByIdForAdmin,
-    getContractTimeLineByIdForAdmin
+    getContractTimeLineByIdForAdmin,
+    raiseToRegulator,
+    respondToContract
 ];
 module.exports = ContractBaseRoute;

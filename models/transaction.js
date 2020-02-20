@@ -34,6 +34,7 @@ var transaction = new Schema({
       Config.APP_CONSTANTS.DATABASE.ACTION_TYPE.MAINTENANCE,
       Config.APP_CONSTANTS.DATABASE.ACTION_TYPE.QUERY,
       Config.APP_CONSTANTS.DATABASE.ACTION_TYPE.TERMINATE,
+      Config.APP_CONSTANTS.DATABASE.ACTION_TYPE.CRITICALREQUEST,
     ]
   },
   date: { type: Date, default: Date.now }

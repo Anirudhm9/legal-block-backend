@@ -19,6 +19,15 @@ var action = new Schema({
       Config.APP_CONSTANTS.DATABASE.USER_TYPE.ASSIGNEE,
     ]
   }],
+  onStatus: [{
+    type: String, enum: [
+      Config.APP_CONSTANTS.DATABASE.CONTRACT_STATUS.PROCESSING,
+      Config.APP_CONSTANTS.DATABASE.CONTRACT_STATUS.COMPLETED,
+      Config.APP_CONSTANTS.DATABASE.CONTRACT_STATUS.DENIED,
+      Config.APP_CONSTANTS.DATABASE.CONTRACT_STATUS.INITIATED,
+      Config.APP_CONSTANTS.DATABASE.CONTRACT_STATUS.TERMINATED
+    ]
+  }],
   active: { type: Boolean, default: true },
   keysRequired: [
     {

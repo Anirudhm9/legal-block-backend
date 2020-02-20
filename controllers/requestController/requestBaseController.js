@@ -384,7 +384,7 @@ var respondToRequest = function (userData, payloadData, callback) {
     },
     function (cb) {
       var status = null;
-      if (!(String(request.requestor) == String(userData._id))) {
+      // if (!(String(request.requestor) == String(userData._id))) {
         if (payloadData.approve == "true") {
           status = Config.APP_CONSTANTS.DATABASE.TRANSACTION_STATUS.APPROVED;
         }
@@ -394,10 +394,10 @@ var respondToRequest = function (userData, payloadData, callback) {
         else {
           status = Config.APP_CONSTANTS.DATABASE.TRANSACTION_STATUS.PROCESSING;
         }
-      }
-      else {
-        status = Config.APP_CONSTANTS.DATABASE.TRANSACTION_STATUS.PROCESSING
-      }
+      // }
+      // else {
+      //   status = Config.APP_CONSTANTS.DATABASE.TRANSACTION_STATUS.PROCESSING
+      // }
 
       var criteria = {
         _id: payloadData.requestId
@@ -423,7 +423,7 @@ var respondToRequest = function (userData, payloadData, callback) {
     function (cb) {
       console.log("<<<<<<<>>>>>>>>", request)
       var status = null;
-      if (!(String(request.requestor) == String(userData._id))) {
+      // if (!(String(request.requestor) == String(userData._id))) {
         if (payloadData.approve == "true") {
           status = Config.APP_CONSTANTS.DATABASE.TRANSACTION_STATUS.APPROVED
         }
@@ -433,10 +433,10 @@ var respondToRequest = function (userData, payloadData, callback) {
         else {
           status = Config.APP_CONSTANTS.DATABASE.TRANSACTION_STATUS.PROCESSING
         }
-      }
-      else {
-        status = Config.APP_CONSTANTS.DATABASE.TRANSACTION_STATUS.PROCESSING
-      }
+      // }
+      // else {
+      //   status = Config.APP_CONSTANTS.DATABASE.TRANSACTION_STATUS.PROCESSING
+      // }
 
       var objToSave = {
         contractId: request.contractId,
@@ -455,6 +455,23 @@ var respondToRequest = function (userData, payloadData, callback) {
           cb();
         }
       })
+    },
+    function (cb) {
+      if (payloadData.approve == "true" && request.requestType == Config.APP_CONSTANTS.DATABASE.ACTION_TYPE.TERMINATE) {
+        Service.ContractService.updateContracts({ _id: request.contractId }, { $set: { contractStatus: Config.APP_CONSTANTS.DATABASE.CONTRACT_STATUS.TERMINATED } }, {}, function (err, data) {
+          if (err) cb(err)
+          else cb();
+        })
+      }
+      else if (payloadData.approve == "true" && request.requestType == Config.APP_CONSTANTS.DATABASE.ACTION_TYPE.QUERY && contract.contractStatus == Config.APP_CONSTANTS.DATABASE.CONTRACT_STATUS.TERMINATED && (String(request.requestor)) == String(userData._id)) {
+        Service.ContractService.updateContracts({ _id: request.contractId }, { $set: { contractStatus: Config.APP_CONSTANTS.DATABASE.CONTRACT_STATUS.COMPLETED } }, {}, function (err, data) {
+          if (err) cb(err)
+          else cb();
+        })
+      }
+      else {
+        cb();
+      }
     }
   ], function (err, result) {
     if (err) callback(err)
