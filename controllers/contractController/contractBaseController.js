@@ -350,6 +350,64 @@ var getContractByIdForAdmin = function (userData, payloadData, callback) {
     })
 }
 
+var respondToContract = function (userData, payloadData, callback) {
+    var contracts = null;
+    async.series([
+        function (cb) {
+            var criteria = {
+                _id: userData._id,
+            };
+            Service.AdminService.getAdmin(criteria, { password: 0 }, {}, function (err, data) {
+                if (err) cb(err);
+                else {
+                    if (data.length == 0) cb(ERROR.INCORRECT_ACCESSTOKEN);
+                    else {
+                        userFound = (data && data[0]) || null;
+                        cb();
+                    }
+                }
+            });
+        },
+        function (cb) {
+            var criteria = {
+                _id: payloadData.contractId,
+                contractStatus: Config.APP_CONSTANTS.DATABASE.CONTRACT_STATUS.TERMINATED
+            }
+            Service.ContractService.updateContracts(criteria, { $set: { contractStatus: Config.APP_CONSTANTS.DATABASE.CONTRACT_STATUS.COMPLETED } }, {}, function (err, data) {
+                if (err) cb(err)
+                else {
+                    if (!data || data.length == 0) {
+                        cb(ERROR.INVALID_TRANSACTION);
+                    }
+                    else {
+                        contracts = data;
+                        console.log("!!!!!!!!!!!!!>>>>>>>>", contracts)
+                        cb();
+                    }
+                }
+            })
+        },
+        function (cb) {
+            var objToSave = {
+                contractId: payloadData.contractId,
+                assignee: contracts.assignees,
+                assignor: contracts.assignor,
+                transactionStatus: Config.APP_CONSTANTS.DATABASE.TRANSACTION_STATUS.COMPLETED,
+                requestResponder: userData._id,
+                transactionType: Config.APP_CONSTANTS.DATABASE.TRANSACTION_TYPE.CONTRACT,
+                transactionSubType: Config.APP_CONSTANTS.DATABASE.ACTION_TYPE.CRITICALREQUEST
+            }
+            Service.TransactionService.createTransaction(objToSave, function (err, data) {
+                if (err) cb(err)
+                else cb();
+            })
+        }
+    ], function (err, result) {
+        if (err) callback(err)
+        else callback(null, { data: contracts })
+    })
+}
+
 var getContractStatuses = function (userData, callback) {
     var contracts = null;
     var statuses = {
@@ -521,7 +579,7 @@ var getContractTimeLineById = function (userData, payloadData, callback) {
                     var newData = [];
                     _.map(data, function (item) {
                         var hash = (crypto.createHmac('sha256', process.env.JWT_SECRET_KEY).update(String(item._id)).digest('hex'));
-                        var obj = {...item._doc, hash: hash.toUpperCase()}
+                        var obj = { ...item._doc, hash: hash.toUpperCase() }
                         newData.push(obj);
                     })
                     transactions = newData;
@@ -535,6 +593,88 @@ var getContractTimeLineById = function (userData, payloadData, callback) {
     })
 }
 
+var raiseToRegulator = function (userData, payloadData, callback) {
+    var transactions = null;
+    async.series([
+        function (cb) {
+            var criteria = {
+                _id: userData._id,
+            };
+            Service.UserService.getUser(criteria, { password: 0 }, {}, function (err, data) {
+                if (err) cb(err);
+                else {
+                    if (data.length == 0) cb(ERROR.INCORRECT_ACCESSTOKEN);
+                    else {
+                        userFound = (data && data[0]) || null;
+                        cb();
+                    }
+                }
+            });
+        },
+        function (cb) {
+            var criteria = {
+                _id: payloadData.contractId,
+                $or: [
+                    {
+                        assignor: userData._id
+                    },
+                    {
+                        assignees: {
+                            $in: [userData._id]
+                        }
+                    }
+                ]
+            }
+            Service.ContractService.getContract(criteria, {}, {}, function (err, data) {
+                if (err) cb(err)
+                else {
+                    if (data && data.length == 0) {
+                        cb(ERROR.INVALID_TRANSACTION)
+                    }
+                    else {
+                        contract = data && data[0] || null;
+                        console.log(contract)
+                        cb();
+                    }
+                }
+            })
+        },
+        function (cb) {
+            if (contract.contractStatus == Config.APP_CONSTANTS.DATABASE.CONTRACT_STATUS.TERMINATED) {
+                cb();
+            }
+            else {
+                cb(ERROR.INVALID_TRANSACTION);
+            }
+        },
+        function (cb) {
+            Service.ContractService.updateContracts({ _id: payloadData.contractId }, { $set: { critical: true } }, {}, function (err, data) {
+                if (err) cb(err)
+                else {
+                    cb();
+                }
+            })
+        },
+        function (cb) {
+            var objToSave = {
+                contractId: payloadData.contractId,
+                assignee: contract.assignee,
+                assignor: contract.assignor,
+                transactionStatus: Config.APP_CONSTANTS.DATABASE.TRANSACTION_STATUS.CREATED,
+                requestResponder: userData._id,
+                transactionType: Config.APP_CONSTANTS.DATABASE.TRANSACTION_TYPE.CONTRACT,
+                transactionSubType: Config.APP_CONSTANTS.DATABASE.ACTION_TYPE.CRITICALREQUEST
+            }
+            Service.TransactionService.createTransaction(objToSave, function (err, data) {
+                if (err) cb(err)
+                else cb();
+            })
+        }
+    ], function (err, result) {
+        if (err) callback(err)
+        else callback(null, { data: null })
+    })
+}
 
 var getContractTimeLineByIdForAdmin = function (userData, payloadData, callback) {
     var transactions = null;
@@ -597,7 +737,7 @@ var getContractTimeLineByIdForAdmin = function (userData, payloadData, callback)
                     var newData = [];
                     _.map(data, function (item) {
                         var hash = (crypto.createHmac('sha256', process.env.JWT_SECRET_KEY).update(String(item._id)).digest('hex'));
-                        var obj = {...item._doc, hash: hash.toUpperCase()}
+                        var obj = { ...item._doc, hash: hash.toUpperCase() }
                         newData.push(obj);
                     })
                     transactions = newData;
@@ -898,5 +1038,7 @@ module.exports = {
     getContractTimeLineById: getContractTimeLineById,
     getContractStatuses: getContractStatuses,
     getContractByIdForAdmin: getContractByIdForAdmin,
-    getContractTimeLineByIdForAdmin: getContractTimeLineByIdForAdmin
+    getContractTimeLineByIdForAdmin: getContractTimeLineByIdForAdmin,
+    raiseToRegulator: raiseToRegulator,
+    respondToContract: respondToContract
 };

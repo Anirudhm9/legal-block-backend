@@ -49,6 +49,7 @@ var createAction = function (userData, payloadData, callback) {
 var getActions = function (userData, payloadData, callback) {
   var actions = null;
   var contract = null;
+  var name;
   async.series([
 
     function (cb) {
@@ -79,28 +80,30 @@ var getActions = function (userData, payloadData, callback) {
         }
       })
     },
-    function (cb) {
-      if (contract.contractStatus == Config.APP_CONSTANTS.DATABASE.CONTRACT_STATUS.INITIATED) {
-        cb()
-      }
-      else {
-        cb(ERROR.INVALID_TRANSACTION)
-      }
-    },
+    // function (cb) {
+    //   if (contract.contractStatus == Config.APP_CONSTANTS.DATABASE.CONTRACT_STATUS.INITIATED) {
+    //     cb()
+    //   }
+    //   else {
+    //     cb(ERROR.INVALID_TRANSACTION)
+    //   }
+    // },
     function (cb) {
       var criteria = null;
       if (String(contract.assignor) == String(userData._id)) {
         criteria = {
           active: true,
           userType: { $in: [Config.APP_CONSTANTS.DATABASE.USER_TYPE.ASSIGNOR] },
-          contractType: contract.contractType
+          contractType: contract.contractType,
+          onStatus: { $in: [contract.contractStatus] }
         }
       }
       else {
         criteria = {
           active: true,
           userType: { $in: [Config.APP_CONSTANTS.DATABASE.USER_TYPE.ASSIGNEE] },
-          contractType: contract.contractType
+          contractType: contract.contractType,
+          onStatus: contract.contractStatus
         }
       }
       Service.ActionService.getAction(criteria, { __v: 0, active: 0 }, {}, function (err, data) {
@@ -261,23 +264,29 @@ var executeAction = function (userData, payloadData, callback) {
         cb();
       }
     },
-    function (cb) {
-      if (contract.contractStatus == Config.APP_CONSTANTS.DATABASE.CONTRACT_STATUS.INITIATED) {
-        cb()
-      }
-      else {
-        cb(ERROR.INVALID_TRANSACTION)
-      }
-    },
+    // function (cb) {
+    //   if (contract.contractStatus == Config.APP_CONSTANTS.DATABASE.CONTRACT_STATUS.INITIATED) {
+    //     cb()
+    //   }
+    //   else {
+    //     cb(ERROR.INVALID_TRANSACTION)
+    //   }
+    // },
     function (cb) {
       var criteria = {
-        _id: payloadData.actionId
+        _id: payloadData.actionId,
+        onStatus: { $in: [contract.contractStatus] }
       };
       Service.ActionService.getAction(criteria, { __v: 0, active: 0 }, {}, function (err, data) {
         if (err) cb(err)
         else {
-          actions = data && data[0];
-          cb();
+          if (data.length == 0) {
+            cb(ERROR.INVALID_TRANSACTION)
+          }
+          else {
+            actions = data && data[0];
+            cb();
+          }
         }
       })
     },
@@ -317,9 +326,9 @@ var executeAction = function (userData, payloadData, callback) {
     },
     function (cb) {
       if (actions.actionName != Config.APP_CONSTANTS.DATABASE.ACTION_TYPE.RESPOND) {
-        var requestData ={};
-        requestData.contractId =  payloadData.keysRequired.contractId;
-        requestData.message =  payloadData.keysRequired.message;
+        var requestData = {};
+        requestData.contractId = payloadData.keysRequired.contractId;
+        requestData.message = payloadData.keysRequired.message;
         requestData.request = payloadData.keysRequired;
         requestData.requestType = actions.actionName;
         requestData.userType = user;
@@ -334,7 +343,7 @@ var executeAction = function (userData, payloadData, callback) {
           };
         })
       }
-      else{
+      else {
         cb(ERROR.INVALID_TRANSACTION);
       }
     },

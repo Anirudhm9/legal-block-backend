@@ -14,9 +14,11 @@ var contracts = new Schema({
       Config.APP_CONSTANTS.DATABASE.CONTRACT_STATUS.PROCESSING,
       Config.APP_CONSTANTS.DATABASE.CONTRACT_STATUS.COMPLETED,
       Config.APP_CONSTANTS.DATABASE.CONTRACT_STATUS.DENIED,
-      Config.APP_CONSTANTS.DATABASE.CONTRACT_STATUS.INITIATED
+      Config.APP_CONSTANTS.DATABASE.CONTRACT_STATUS.INITIATED,
+      Config.APP_CONSTANTS.DATABASE.CONTRACT_STATUS.TERMINATED
     ]
   },
+  critical: { type: Boolean, default: false },
   assigneesSigned: [
     { type: Schema.ObjectId, ref: 'user' }
   ],
