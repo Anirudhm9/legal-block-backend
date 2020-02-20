@@ -373,7 +373,7 @@ var respondToContract = function (userData, payloadData, callback) {
                 _id: payloadData.contractId,
                 contractStatus: Config.APP_CONSTANTS.DATABASE.CONTRACT_STATUS.TERMINATED
             }
-            Service.ContractService.updateContracts(criteria, { $set: { contractStatus: Config.APP_CONSTANTS.DATABASE.CONTRACT_STATUS.COMPLETED } }, {}, function (err, data) {
+            Service.ContractService.updateContracts(criteria, { $set: { contractStatus: Config.APP_CONSTANTS.DATABASE.CONTRACT_STATUS.COMPLETED, critical: false } }, {}, function (err, data) {
                 if (err) cb(err)
                 else {
                     if (!data || data.length == 0) {
@@ -411,10 +411,12 @@ var respondToContract = function (userData, payloadData, callback) {
 var getContractStatuses = function (userData, callback) {
     var contracts = null;
     var statuses = {
-        AwaitingMySignature: [],
-        WaitingForOthers: [],
-        Completed: [],
-        Denied: [],
+        awaitingMySignature: [],
+        waitingForOthers: [],
+        completed: [],
+        denied: [],
+        terminated: [],
+        initiated: []
     };
     async.series([
 
@@ -488,16 +490,22 @@ var getContractStatuses = function (userData, callback) {
         function (cb) {
             for (var i in contracts) {
                 if ((contracts[i].assignees.includes(String(userData._id)) && !contracts[i].assigneesSigned.includes(String(userData._id)) || (String(contracts[i].assignor) == String(userData._id)) && contracts[i].assigneesSigned.length == contracts[i].assignees.length) && contracts[i].contractStatus == Config.APP_CONSTANTS.DATABASE.CONTRACT_STATUS.PROCESSING) {
-                    statuses.AwaitingMySignature.push(contracts[i]);
+                    statuses.awaitingMySignature.push(contracts[i]);
                 }
                 else if ((contracts[i].assigneesSigned.includes(String(userData._id)) || (String(contracts[i].assignor) == String(userData._id))) && contracts[i].contractStatus == Config.APP_CONSTANTS.DATABASE.CONTRACT_STATUS.PROCESSING) {
-                    statuses.WaitingForOthers.push(contracts[i])
+                    statuses.waitingForOthers.push(contracts[i])
                 }
                 else if (contracts[i].assigneesSigned.length == contracts[i].assignees.length && (contracts[i].contractStatus == Config.APP_CONSTANTS.DATABASE.CONTRACT_STATUS.INITIATED)) {
-                    statuses.Completed.push(contracts[i])
+                    statuses.initiated.push(contracts[i])
                 }
                 else if (contracts[i].contractStatus == Config.APP_CONSTANTS.DATABASE.CONTRACT_STATUS.DENIED) {
-                    statuses.Denied.push(contracts[i]);
+                    statuses.denied.push(contracts[i]);
+                }
+                else if (contracts[i].contractStatus == Config.APP_CONSTANTS.DATABASE.CONTRACT_STATUS.TERMINATED) {
+                    statuses.terminated.push(contracts[i]);
+                }
+                else if (contracts[i].contractStatus == Config.APP_CONSTANTS.DATABASE.CONTRACT_STATUS.COMPLETED) {
+                    statuses.completed.push(contracts[i]);
                 }
             }
             cb();
@@ -792,6 +800,7 @@ var viewAllContractsByCategory = function (userData, callback) {
                                     'contractType': '$$contract.contractType',
                                     'dateAssigned': '$$contract.dateAssigned',
                                     'contractStatus': '$$contract.contractStatus',
+                                    'critical': '$$contract.critical'
                                 }
                             }
                         }
