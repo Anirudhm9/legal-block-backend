@@ -117,6 +117,42 @@ var getActions = {
   }
 };
 
+var getAllActions = {
+  method: "GET",
+  path: "/api/admin/actions/getAllActions",
+  handler: function (request, h) {
+    var userData =
+      (request.auth &&
+        request.auth.credentials &&
+        request.auth.credentials.userData) ||
+      null;
+    return new Promise((resolve, reject) => {
+      Controller.ActionBaseController.getAllActions(userData, function (err, data) {
+        if (!err) {
+          resolve(UniversalFunctions.sendSuccess(null, data));
+        } else {
+          reject(UniversalFunctions.sendError(err));
+        }
+      });
+    });
+  },
+  config: {
+    description: "Get actions",
+    tags: ["api", "action"],
+    validate: {
+      headers: UniversalFunctions.authorizationHeaderObj,
+      failAction: UniversalFunctions.failActionFunction
+    },
+    auth: "UserAuth",
+    plugins: {
+      "hapi-swagger": {
+        responseMessages:
+          UniversalFunctions.CONFIG.APP_CONSTANTS.swaggerDefaultResponseMessages
+      }
+    }
+  }
+};
+
 var updateAction = {
   method: "PUT",
   path: "/api/actions/updateAction",
@@ -268,6 +304,7 @@ var ActionBaseRoute = [
   getActions,
   updateAction,
   deleteAction,
-  executeAction
+  executeAction,
+  getAllActions
 ];
 module.exports = ActionBaseRoute;

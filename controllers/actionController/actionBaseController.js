@@ -121,6 +121,43 @@ var getActions = function (userData, payloadData, callback) {
   })
 }
 
+var getAllActions = function (userData, callback) {
+  var actions = null;
+  var contract = null;
+  var name;
+  async.series([
+
+    function (cb) {
+      var criteria = {
+        _id: userData._id
+      };
+      Service.AdminService.getAdmin(criteria, { password: 0 }, {}, function (err, data) {
+        if (err) cb(err);
+        else {
+          if (data.length == 0) cb(ERROR.INCORRECT_ACCESSTOKEN);
+          else {
+            userFound = (data && data[0]) || null;
+            cb();
+          }
+        }
+      });
+    },
+    function (cb) {
+      Service.ActionService.getAction({}, { __v: 0, active: 0 }, {}, function (err, data) {
+        if (err) cb(err)
+        else {
+          actions = data;
+          cb();
+        }
+      })
+    }
+
+  ], function (err, result) {
+    if (err) callback(err)
+    else callback(null, { data: actions })
+  })
+}
+
 var updateAction = function (userData, payloadData, callback) {
   var actions = null;
   async.series([
@@ -357,5 +394,6 @@ module.exports = {
   getActions: getActions,
   updateAction: updateAction,
   deleteAction: deleteAction,
-  executeAction: executeAction
+  executeAction: executeAction,
+  getAllActions: getAllActions
 };

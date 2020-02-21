@@ -632,7 +632,8 @@ var raiseToRegulator = function (userData, payloadData, callback) {
                             $in: [userData._id]
                         }
                     }
-                ]
+                ],
+                critical: false
             }
             Service.ContractService.getContract(criteria, {}, {}, function (err, data) {
                 if (err) cb(err)
